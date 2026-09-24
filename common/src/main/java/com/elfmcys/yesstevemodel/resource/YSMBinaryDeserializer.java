@@ -956,6 +956,9 @@ public class YSMBinaryDeserializer implements AutoCloseable{
 
     private void assignMainModels(List<RawYsmModel.RawGeometry> tempMainModels) {
         for (RawYsmModel.RawGeometry tempMainModel : tempMainModels) {
+            if (tempMainModel == null) {
+                continue;
+            }
             switch (tempMainModel.modelType) {
                 case 1:
                     model.mainEntity.mainModel = tempMainModel;

@@ -3,14 +3,11 @@ package com.ysm.parser;
 /**
  * JNI wrapper for YSMParser native library.
  *
- * <p>Loads {@code YSMParserJNI} (built with {@code -DYSM_TARGET_JNI=ON})
- * and exposes the C++ YSM parser to Java.
+ * <p>The native library is loaded by {@link YSMParserNativeLoader} before any
+ * method on this class is called. Do NOT call methods on this class without
+ * first calling {@code YSMParserNativeLoader.load()}.
  */
 public class YSMParser {
-
-    static {
-        System.loadLibrary("YSMParserJNI");
-    }
 
     /**
      * Parse a .ysm file and extract all resources to the output directory.

@@ -15,6 +15,7 @@ import com.elfmcys.yesstevemodel.resource.YSMBinaryDeserializer;
 import com.elfmcys.yesstevemodel.resource.YSMBinarySerializer;
 import com.elfmcys.yesstevemodel.resource.YSMClientMapper;
 import com.elfmcys.yesstevemodel.resource.YSMFolderDeserializer;
+import com.elfmcys.yesstevemodel.resource.NativeParseUtil;
 import com.elfmcys.yesstevemodel.resource.pojo.RawYsmModel;
 import com.elfmcys.yesstevemodel.util.YSMNativeHelper;
 import com.elfmcys.yesstevemodel.util.YSMThreadPool;
@@ -531,26 +532,36 @@ public final class ServerModelManager {
                         String modelId = baseDir.relativize(file).toString().replace('\\', '/');
                         byte[] raw = Files.readAllBytes(file);
                         int ysmCryptoVersion = YesModelUtils.getYsmCryptoVersion(raw);
-                        if (ysmCryptoVersion == -1) throw new IllegalStateException("Unknown YSM crypto version for file: " + file);
 
-                        RawYsmModel rawModel;
-                        if (ysmCryptoVersion == 1 || ysmCryptoVersion == 2) { // 旧版加密模型
-                            Map<String, byte[]> input = YesModelUtils.input(raw);
-                            try (YSMFolderDeserializer deserializer = new YSMFolderDeserializer(input)) {
-                                rawModel = deserializer.deserialize();
+                        RawYsmModel rawModel = null;
+                        try {
+                            if (ysmCryptoVersion == 1 || ysmCryptoVersion == 2) { // 旧版加密模型
+                                Map<String, byte[]> input = YesModelUtils.input(raw);
+                                try (YSMFolderDeserializer deserializer = new YSMFolderDeserializer(input)) {
+                                    rawModel = deserializer.deserialize();
+                                }
+                            } else if (ysmCryptoVersion == 3) { // 新版加密模型，先尝试 Java 快速路径
+                                byte[] decrypted = YsmCrypt.decryptYsmFile(raw);
+                                try (YSMBinaryDeserializer deserializer = new YSMBinaryDeserializer(decrypted)) {
+                                    rawModel = deserializer.deserializeKeepOpen();
+                                    deserializer.parseYSMFooter(rawModel); // 只用于gui展示数据
+                                }
                             }
-                        } else {
-                            byte[] decrypted = YsmCrypt.decryptYsmFile(raw);
-                            try (YSMBinaryDeserializer deserializer = new YSMBinaryDeserializer(decrypted)) {
-                                rawModel = deserializer.deserializeKeepOpen();
-                                deserializer.parseYSMFooter(rawModel); // 只用于gui展示数据
-                            }
+                        } catch (Exception e) {
+                            // Java 路径失败（含 -1 未知版本），回退到原生 YSMParser
+                            rawModel = null;
                         }
 
-                        ServerModelData data = processAndCacheModel(modelId, rawModel, cacheDir, isAuth, validCaches);
-                        if (data != null) {
-                            loaded.put(modelId, data);
-                            if (isAuth) authIds.add(modelId);
+                        if (rawModel == null) {
+                            rawModel = NativeParseUtil.parseNative(raw, modelId);
+                        }
+
+                        if (rawModel != null) {
+                            ServerModelData data = processAndCacheModel(modelId, rawModel, cacheDir, isAuth, validCaches);
+                            if (data != null) {
+                                loaded.put(modelId, data);
+                                if (isAuth) authIds.add(modelId);
+                            }
                         }
                     } catch (Exception e) {
                         YesSteveModel.LOGGER.error("Failed to load binary model at: " + file, e);
@@ -1108,7 +1119,7 @@ public final class ServerModelManager {
             if (modelData.getModelInfo().getTextures().contains(modelData.getLoadedModelData().getModelProperties().getDefaultTexture())) {
                 defaultTexture = modelData.getLoadedModelData().getModelProperties().getDefaultTexture();
             } else {
-                defaultTexture = modelData.getModelInfo().getTextures().get(0);
+                defaultTexture = modelData.getModelInfo().getTextures().isEmpty() ? "" : modelData.getModelInfo().getTextures().get(0);
             }
         }
         return Pair.of(defaultModelId, defaultTexture);

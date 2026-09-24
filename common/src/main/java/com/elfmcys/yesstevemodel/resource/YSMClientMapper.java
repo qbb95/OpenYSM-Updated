@@ -954,6 +954,11 @@ public class YSMClientMapper {
     }
 
     public static GeometryDescription buildContext(RawYsmModel.RawGeometry model) {
+        if (model == null) {
+            // 某些子实体/退化模型可能没有 mainModel（例如只有箭的动画但没有主模型）。
+            // 返回一个兜底 GeometryDescription，避免后续读 model.identifier 时 NPE。
+            return new GeometryDescription("geometry.unknown", 64f, 64f, 1f, 1f, new double[3]);
+        }
         return new GeometryDescription(
                 model.identifier,
                 model.textureWidth, // default texture width ratio

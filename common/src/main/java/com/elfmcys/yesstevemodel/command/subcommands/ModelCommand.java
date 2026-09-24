@@ -83,7 +83,7 @@ public class ModelCommand {
         if (Objects.equals(textureName, "-")) {
             textureName = info.getLoadedModelData().getModelProperties().getDefaultTexture();
             if (StringUtils.isBlank(textureName) || !info.getModelInfo().getTextures().contains(textureName)) {
-                textureName = info.getModelInfo().getTextures().get(0);
+                textureName = info.getModelInfo().getTextures().isEmpty() ? "" : info.getModelInfo().getTextures().get(0);
             }
         }
         if (ServerModelManager.getServerModelInfo().get(modelName).getModelInfo().getTextures().isEmpty()) {

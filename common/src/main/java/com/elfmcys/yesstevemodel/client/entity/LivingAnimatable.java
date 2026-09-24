@@ -181,7 +181,7 @@ public abstract class LivingAnimatable<T extends LivingEntity> extends GeoEntity
             if (abstractTexture != null) {
                 ((TexturedModelWrapper) getRenderShape()).setTexture(abstractTexture);
                 this.textureIndex = map.getValuesList().indexOf(abstractTexture);
-            } else {
+            } else if (!map.isEmpty()) {
                 this.currentTextureName = map.getKeyAt(0);
                 ((TexturedModelWrapper) getRenderShape()).setTexture(map.getValueAt(0));
                 this.textureIndex = 0;
@@ -207,7 +207,8 @@ public abstract class LivingAnimatable<T extends LivingEntity> extends GeoEntity
     }
 
     public String getCurrentTextureName() {
-        return isModelReady() ? this.currentTextureName : getModelAssembly().getAnimationBundle().getTextures().getKeyAt(0);
+        OrderedStringMap<String, ? extends AbstractTexture> textures = getModelAssembly().getAnimationBundle().getTextures();
+        return isModelReady() ? this.currentTextureName : (textures.isEmpty() ? "" : textures.getKeyAt(0));
     }
 
     @Override
@@ -257,7 +258,10 @@ public abstract class LivingAnimatable<T extends LivingEntity> extends GeoEntity
         public TexturedModelWrapper(ModelAssembly modelAssembly, boolean isActive, boolean collectAllTextures, boolean registerImmediately, int textureResolution) {
             super(modelAssembly, isActive);
             AbstractTexture abstractTexture = modelAssembly.getAnimationBundle().getTextures().get(LivingAnimatable.this.currentTextureName);
-            this.currentTexture = UploadManager.getOrCreateLocatableWithSize(abstractTexture != null ? abstractTexture : modelAssembly.getAnimationBundle().getDefaultTexture(), registerImmediately, textureResolution);
+            if (abstractTexture == null) {
+                abstractTexture = modelAssembly.getAnimationBundle().getDefaultTexture();
+            }
+            this.currentTexture = abstractTexture != null ? UploadManager.getOrCreateLocatableWithSize(abstractTexture, registerImmediately, textureResolution) : null;
             this.textureResolution = textureResolution;
             if (collectAllTextures) {
                 this.allTextures = new ArrayList();
@@ -281,7 +285,7 @@ public abstract class LivingAnimatable<T extends LivingEntity> extends GeoEntity
 
         @Override
         public boolean isValid() {
-            return this.currentTexture.getResourceLocation().isPresent();
+            return this.currentTexture != null && this.currentTexture.getResourceLocation().isPresent();
         }
     }
 }

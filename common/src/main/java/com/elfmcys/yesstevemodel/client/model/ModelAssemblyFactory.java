@@ -97,7 +97,11 @@ public class ModelAssemblyFactory {
             textureList.add(texture);
             textureList.addAll(texture.getSuffixTextures().values());
         }
-        String defaultTextureName = (StringUtils.isEmpty(clientModelInfo.getInfo().getModelProperties().getDefaultTexture()) || !hierarchyData.getTextureMap().containsKey(clientModelInfo.getInfo().getModelProperties().getDefaultTexture())) ? hierarchyData.getTextureMap().getKeyAt(0) : clientModelInfo.getInfo().getModelProperties().getDefaultTexture();
+        String defaultTextureName = clientModelInfo.getInfo().getModelProperties().getDefaultTexture();
+        if (StringUtils.isEmpty(defaultTextureName) || !hierarchyData.getTextureMap().containsKey(defaultTextureName)) {
+            // 模型没有默认纹理或纹理表为空时，回退到第一个纹理；纹理表完全为空则用空串，避免 getKeyAt(0) 越界。
+            defaultTextureName = hierarchyData.getTextureMap().isEmpty() ? "" : hierarchyData.getTextureMap().getKeyAt(0);
+        }
         return new PlayerModelBundle(
                 mainModel,
                 armModel,

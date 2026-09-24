@@ -799,7 +799,10 @@ public class ClientModelManager {
                     localModelContext = runtimeModel;
 
                     Minecraft.getInstance().execute(() -> {
-                        defaultTexture = UploadManager.getOrCreateLocatable(runtimeModel.getAnimationBundle().getTextures().getValueAt(0), true);
+                        OrderedStringMap<String, ? extends AbstractTexture> textures = runtimeModel.getAnimationBundle().getTextures();
+                        if (!textures.isEmpty()) {
+                            defaultTexture = UploadManager.getOrCreateLocatable(textures.getValueAt(0), true);
+                        }
                     });
                     return;
                 }

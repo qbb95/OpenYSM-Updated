@@ -92,9 +92,17 @@ public class YSMBinarySerializer {
     }
 
     private static void writeSubEntities(YSMByteBuf buf, Map<String, RawYsmModel.RawSubEntity> entities, int format, String category) {
-        buf.writeVarInt(entities.size());
-        int index = 0;
+        // 与 YSMBinaryDeserializer 一样，跳过没有模型或没有纹理的退化子实体，
+        // 否则下面 baseTex = sub.textures.values().iterator().next() 会抛 NoSuchElementException。
+        List<RawYsmModel.RawSubEntity> valid = new ArrayList<>();
         for (RawYsmModel.RawSubEntity sub : entities.values()) {
+            if (sub.model != null && !sub.textures.isEmpty()) {
+                valid.add(sub);
+            }
+        }
+        buf.writeVarInt(valid.size());
+        int index = 0;
+        for (RawYsmModel.RawSubEntity sub : valid) {
             buf.writeVarInt(sub.animationFiles.size());
             for (RawYsmModel.RawAnimationFile animFile : sub.animationFiles.values()) {
                 buf.writeString(animFile.fileHash != null ? animFile.fileHash : "");
