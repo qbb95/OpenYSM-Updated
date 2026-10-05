@@ -1,5 +1,6 @@
 上游项目已迁移至 https://github.com/OpenYSMDev/OpenYSM
 
+增加了对高版本ysm加密模型的加载能力
 ---
 
 <div align="center">
