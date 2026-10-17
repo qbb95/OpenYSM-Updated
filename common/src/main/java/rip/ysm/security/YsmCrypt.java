@@ -32,8 +32,15 @@ public class YsmCrypt {
     public record EncryptedPacket(byte[] data, byte[] nextKey) {
     }
 
+    /**
+     * 缓存序列化格式版本。改动 YSMBinarySerializer 的输出内容时递增，
+     * 使旧的 cache/server、cache/client 文件失效并重新生成。
+     * v3：控制器状态允许同名动画/转移，改为按列表序列化。
+     */
+    private static final String CACHE_FORMAT_VERSION = "v3";
+
     public static long[] calculateModelHashes(String modelHashStr, byte[] serverKey) {
-        byte[] data = (modelHashStr/* + "111"*/).getBytes(StandardCharsets.UTF_8);
+        byte[] data = (CACHE_FORMAT_VERSION + ':' + modelHashStr).getBytes(StandardCharsets.UTF_8);
         byte[] xored = mt19937Xor(data, serverKey, SEED_KEY_DERIVATION);
         CityHash ch = new CityHash();
         long hash1 = ch.hash64WithSeed(xored, SEED_CACHE_VERIFICATION);

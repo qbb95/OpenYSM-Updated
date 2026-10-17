@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.resource;
 
 import com.elfmcys.yesstevemodel.resource.pojo.RawYsmModel;
+import com.elfmcys.yesstevemodel.util.data.StringPair;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -830,10 +831,10 @@ public class YSMFolderDeserializer implements AutoCloseable {
                     if (sObj.has("animations") && sObj.get("animations").isJsonArray()) {
                         for (JsonElement ae : sObj.getAsJsonArray("animations")) {
                             if (ae.isJsonPrimitive()) {
-                                state.animations.put(ae.getAsString(), "");
+                                state.animations.add(new StringPair(ae.getAsString(), ""));
                             } else if (ae.isJsonObject()) {
                                 for (Map.Entry<String, JsonElement> objEntry : ae.getAsJsonObject().entrySet()) {
-                                    state.animations.put(objEntry.getKey(), objEntry.getValue().getAsString());
+                                    state.animations.add(new StringPair(objEntry.getKey(), objEntry.getValue().getAsString()));
                                 }
                             }
                         }
@@ -843,7 +844,7 @@ public class YSMFolderDeserializer implements AutoCloseable {
                         for (JsonElement te : sObj.getAsJsonArray("transitions")) {
                             if (te.isJsonObject()) {
                                 for (Map.Entry<String, JsonElement> objEntry : te.getAsJsonObject().entrySet()) {
-                                    state.transitions.put(objEntry.getKey(), objEntry.getValue().getAsString());
+                                    state.transitions.add(new StringPair(objEntry.getKey(), objEntry.getValue().getAsString()));
                                 }
                             }
                         }

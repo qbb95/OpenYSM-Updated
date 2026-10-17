@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.resource;
 
 import com.elfmcys.yesstevemodel.resource.pojo.RawYsmModel;
+import com.elfmcys.yesstevemodel.util.data.StringPair;
 import rip.ysm.security.YSMByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -290,16 +291,16 @@ public class YSMBinarySerializer {
 
                 // animations
                 buf.writeVarInt(state.animations.size());
-                for (Map.Entry<String, String> e : state.animations.entrySet()) {
-                    buf.writeString(e.getKey());
-                    buf.writeString(e.getValue());
+                for (StringPair e : state.animations) {
+                    buf.writeString(e.getFirst());
+                    buf.writeString(e.getSecond());
                 }
 
                 // transitions
                 buf.writeVarInt(state.transitions.size());
-                for (Map.Entry<String, String> e : state.transitions.entrySet()) {
-                    buf.writeString(e.getKey());
-                    buf.writeString(e.getValue());
+                for (StringPair e : state.transitions) {
+                    buf.writeString(e.getFirst());
+                    buf.writeString(e.getSecond());
                 }
 
                 // on_entry

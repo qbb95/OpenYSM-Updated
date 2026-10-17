@@ -1,5 +1,7 @@
 package com.elfmcys.yesstevemodel.resource.pojo;
 
+import com.elfmcys.yesstevemodel.util.data.StringPair;
+
 import java.util.*;
 
 public class RawYsmModel {
@@ -179,8 +181,9 @@ public class RawYsmModel {
 
     public static class RawControllerState {
         public String name;
-        public Map<String, String> animations = new LinkedHashMap<>();
-        public Map<String, String> transitions = new LinkedHashMap<>();
+        // 列表而非 Map：控制器状态允许同名动画/转移（如 落地走向前 的两条 落地走 走不同条件）
+        public List<StringPair> animations = new ArrayList<>();
+        public List<StringPair> transitions = new ArrayList<>();
         public List<String> onEntry = new ArrayList<>();
         public List<String> onExit = new ArrayList<>();
         public List<String> soundEffects = new ArrayList<>();

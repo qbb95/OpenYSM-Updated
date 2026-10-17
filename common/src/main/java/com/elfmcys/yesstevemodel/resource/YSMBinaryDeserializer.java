@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.resource;
 
 import com.elfmcys.yesstevemodel.resource.pojo.RawYsmModel;
+import com.elfmcys.yesstevemodel.util.data.StringPair;
 import io.netty.buffer.Unpooled;
 import rip.ysm.security.YSMByteBuf;
 
@@ -838,12 +839,12 @@ public class YSMBinaryDeserializer implements AutoCloseable{
                 // animations
                 int animationsSize = reader.readVarInt();
                 for (int j = 0; j < animationsSize; j++) {
-                    state.animations.put(reader.readString(), reader.readString());
+                    state.animations.add(new StringPair(reader.readString(), reader.readString()));
                 }
                 // transitions
                 int transitionsSize = reader.readVarInt();
                 for (int j = 0; j < transitionsSize; j++) {
-                    state.transitions.put(reader.readString(), reader.readString());
+                    state.transitions.add(new StringPair(reader.readString(), reader.readString()));
                 }
                 // on_entry
                 int onEntryCount = reader.readVarInt();

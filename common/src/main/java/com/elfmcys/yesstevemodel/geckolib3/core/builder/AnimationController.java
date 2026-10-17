@@ -5,9 +5,6 @@ import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMaps;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 /**
  * 动画控制器解析
  */
@@ -20,7 +17,12 @@ public class AnimationController {
 
     public AnimationController(String initialState, AnimationState[] animationStates) {
         this.stateId = StringPool.computeIfAbsent(initialState);
-        this.states = Int2ReferenceMaps.unmodifiable(new Int2ReferenceOpenHashMap<>(Arrays.stream(animationStates).collect(Collectors.toMap(AnimationState::getHashId, state -> state))));
+        // 同名 state 在后出现的覆盖先出现的；不能用 Collectors.toMap，重名会直接抛异常让整个模型加载失败
+        Int2ReferenceOpenHashMap<AnimationState> byId = new Int2ReferenceOpenHashMap<>(animationStates.length);
+        for (AnimationState state : animationStates) {
+            byId.put(state.getHashId(), state);
+        }
+        this.states = Int2ReferenceMaps.unmodifiable(byId);
     }
 
     public int getStateId() {

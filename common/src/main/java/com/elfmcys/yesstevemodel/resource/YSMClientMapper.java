@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.resource;
 
 import com.elfmcys.yesstevemodel.NativeLibLoader;
+import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.audio.AudioCodec;
 import com.elfmcys.yesstevemodel.audio.AudioTrackData;
 import com.elfmcys.yesstevemodel.client.ClientModelInfo;
@@ -557,21 +558,27 @@ public class YSMClientMapper {
             List<AnimationState> states = new ArrayList<>();
             for (RawYsmModel.RawControllerState rs : rac.states) {
                 List<Pair<String, IValue>> animations = new ArrayList<>();
-                for (Map.Entry<String, String> e : rs.animations.entrySet()) {
+                Set<String> seenAnimations = null;
+                for (StringPair e : rs.animations) {
                     IValue blend = null;
-                    if (!e.getValue().isEmpty()) {
+                    if (!e.getSecond().isEmpty()) {
                         try {
-                            blend = parse(e.getValue());
+                            blend = parse(e.getSecond());
                         } catch (Exception ignore) {
                         }
                     }
-                    animations.add(Pair.of(e.getKey(), blend));
+                    animations.add(Pair.of(e.getFirst(), blend));
+                    if (seenAnimations == null) seenAnimations = new HashSet<>();
+                    if (!seenAnimations.add(e.getFirst())) {
+                        YesSteveModel.LOGGER.warn("[YSM] Controller '{}' state '{}' lists animation '{}' more than once; all entries are kept as separate slots",
+                                rac.animationName, rs.name, e.getFirst());
+                    }
                 }
 
                 List<Pair<String, IValue>> transitions = new ArrayList<>();
-                for (Map.Entry<String, String> e : rs.transitions.entrySet()) {
-                    IValue condition = parse(e.getValue());
-                    transitions.add(Pair.of(e.getKey(), condition));
+                for (StringPair e : rs.transitions) {
+                    IValue condition = parse(e.getSecond());
+                    transitions.add(Pair.of(e.getFirst(), condition));
                 }
 
                 List<IValue> onEntry = parse(rs.onEntry, mergeMultilineExpr);
