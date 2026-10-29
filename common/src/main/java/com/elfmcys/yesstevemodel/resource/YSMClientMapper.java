@@ -64,6 +64,7 @@ public class YSMClientMapper {
     public static class TranslucencyScanner {
         private final BufferedImage[] images;
         private final boolean[] results;
+        private final byte[][] alphaCache;
 //        private int remaining;
 
         public static final int STATE_INVISIBLE = 0;
@@ -73,6 +74,7 @@ public class YSMClientMapper {
         public TranslucencyScanner(BufferedImage[] images, int expectedCount) {
             this.images = images;
             this.results = new boolean[Math.max(expectedCount, images.length)];
+            this.alphaCache = new byte[images.length][];
 //            this.remaining = images.length;
 //
 //            for (BufferedImage image : images) {
@@ -88,6 +90,28 @@ public class YSMClientMapper {
 
         public boolean[] getResults() {
             return results;
+        }
+
+        // 逐像素 getRGB(x,y) 每次都要走颜色模型转换，是解析期的主要 CPU 开销之一。
+        // 这里按行批量取色（复用一行 int 缓冲，避免整图 int[] 造成大块瞬时分配），
+        // 抽出 alpha 存成字节平面，扫描时退化成连续数组读取。
+        private byte[] alphaOf(int index) {
+            byte[] alpha = alphaCache[index];
+            if (alpha != null) return alpha;
+            BufferedImage img = images[index];
+            int width = img.getWidth();
+            int height = img.getHeight();
+            alpha = new byte[width * height];
+            int[] row = new int[width];
+            for (int y = 0; y < height; y++) {
+                img.getRGB(0, y, width, 1, row, 0, width);
+                int rowOffset = y * width;
+                for (int x = 0; x < width; x++) {
+                    alpha[rowOffset + x] = (byte) (row[x] >>> 24);
+                }
+            }
+            alphaCache[index] = alpha;
+            return alpha;
         }
 
         public int scan(RawYsmModel.RawFace face) {
@@ -111,6 +135,7 @@ public class YSMClientMapper {
                 BufferedImage img = images[i];
                 int imgW = img.getWidth();
                 int imgH = img.getHeight();
+                byte[] alphaMap = alphaOf(i);
 
                 int startX = (int) Math.floor(minU * imgW + 0.01f);
                 int endX = (int) Math.floor(maxU * imgW - 0.01f);
@@ -129,9 +154,10 @@ public class YSMClientMapper {
                 boolean imageHasTransparentPixel = false;
                 boolean imageHasColoredTranslucentPixel = false;
 
-                for (int x = startX; x <= endX; x++) {
-                    for (int y = startY; y <= endY; y++) {
-                        int alpha = (img.getRGB(x, y) >>> 24) & 0xFF;
+                for (int y = startY; y <= endY; y++) {
+                    int rowOffset = y * imgW;
+                    for (int x = startX; x <= endX; x++) {
+                        int alpha = alphaMap[rowOffset + x] & 0xFF;
 
                         if (alpha > 0) {
                             imageHasVisiblePixel = true;

@@ -2,13 +2,11 @@ package com.elfmcys.yesstevemodel.client.entity;
 
 import com.elfmcys.yesstevemodel.client.ClientModelManager;
 import com.elfmcys.yesstevemodel.client.animation.condition.ConditionManager;
-import com.elfmcys.yesstevemodel.client.model.VehicleModelBundle;
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.AnimationController;
 import com.elfmcys.yesstevemodel.client.animation.molang.MolangEventDispatcher;
 import com.elfmcys.yesstevemodel.client.model.ModelAssembly;
-import com.elfmcys.yesstevemodel.client.model.ProjectileModelBundle;
 import com.elfmcys.yesstevemodel.client.upload.UploadManager;
 import com.elfmcys.yesstevemodel.geckolib3.core.AnimatableEntity;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.Animation;
@@ -27,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2f;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class LivingAnimatable<T extends LivingEntity> extends GeoEntity<T> {
@@ -251,8 +248,6 @@ public abstract class LivingAnimatable<T extends LivingEntity> extends GeoEntity
 
         public IResourceLocatable currentTexture;
 
-        private final List<IResourceLocatable> allTextures;
-
         private final int textureResolution;
 
         public TexturedModelWrapper(ModelAssembly modelAssembly, boolean isActive, boolean collectAllTextures, boolean registerImmediately, int textureResolution) {
@@ -263,20 +258,6 @@ public abstract class LivingAnimatable<T extends LivingEntity> extends GeoEntity
             }
             this.currentTexture = abstractTexture != null ? UploadManager.getOrCreateLocatableWithSize(abstractTexture, registerImmediately, textureResolution) : null;
             this.textureResolution = textureResolution;
-            if (collectAllTextures) {
-                this.allTextures = new ArrayList();
-                for (AbstractTexture texture : modelAssembly.getAnimationBundle().getTextures().values()) {
-                    this.allTextures.add(UploadManager.getOrCreateLocatable(texture, false));
-                }
-                for (ProjectileModelBundle projectileModelBundle : modelAssembly.getProjectileModels().values()) {
-                    this.allTextures.add(UploadManager.getOrCreateLocatable(projectileModelBundle.getTexture(), false));
-                }
-                for (VehicleModelBundle vehicleModelBundle : modelAssembly.getVehicleModels().values()) {
-                    this.allTextures.add(UploadManager.getOrCreateLocatable(vehicleModelBundle.getTexture(), false));
-                }
-                return;
-            }
-            this.allTextures = null;
         }
 
         private void setTexture(AbstractTexture abstractTexture) {

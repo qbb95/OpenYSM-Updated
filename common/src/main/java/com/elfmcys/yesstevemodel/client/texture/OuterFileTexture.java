@@ -17,7 +17,6 @@ import java.util.Map;
 
 public class OuterFileTexture extends AbstractTexture implements ITextureMap {
     private final byte[] data;
-    private NativeImage loadedImage;
 
     private Map<ShadersTextureType, OuterFileTexture> suffixTextures = Reference2ReferenceMaps.emptyMap();
 
@@ -34,12 +33,13 @@ public class OuterFileTexture extends AbstractTexture implements ITextureMap {
     }
 
     public void doLoad() {
+        NativeImage image = null;
         try {
-            this.loadedImage = NativeImage.read(new ByteArrayInputStream(data));
+            image = NativeImage.read(new ByteArrayInputStream(data));
             GpuDevice gpuDevice = RenderSystem.getDevice();
-            this.texture = gpuDevice.createTexture("OutFileTexture", 5, TextureFormat.RGBA8, loadedImage.getWidth(), loadedImage.getHeight(), 1, 1);
+            this.texture = gpuDevice.createTexture("OutFileTexture", 5, TextureFormat.RGBA8, image.getWidth(), image.getHeight(), 1, 1);
             this.textureView = gpuDevice.createTextureView(this.texture);
-            gpuDevice.createCommandEncoder().writeToTexture(this.texture, loadedImage);
+            gpuDevice.createCommandEncoder().writeToTexture(this.texture, image);
             this.sampler = RenderSystem.getSamplerCache().getSampler(
                 AddressMode.REPEAT, AddressMode.REPEAT,
                 FilterMode.NEAREST, FilterMode.NEAREST,
@@ -47,11 +47,13 @@ public class OuterFileTexture extends AbstractTexture implements ITextureMap {
             );
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            // writeToTexture 是同步上传，上传后解码图即为死重（W*H*4）。data 需保留：
+            // locatable 被 GC 后纹理会 release，模型切回时 load() 会再次调用。
+            if (image != null) {
+                image.close();
+            }
         }
-    }
-
-    public NativeImage getLoadedImage() {
-        return loadedImage;
     }
 
     public void setSuffixTextures(Map<ShadersTextureType, OuterFileTexture> map) {

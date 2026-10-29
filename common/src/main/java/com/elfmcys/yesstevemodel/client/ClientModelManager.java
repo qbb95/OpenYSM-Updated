@@ -61,13 +61,50 @@ public class ClientModelManager {
     private static String currentCacheFolderName;
     private static final AtomicInteger pendingModelsCount = new AtomicInteger(0);
 
-    private static final ThreadPoolExecutor modelPhraseExecutor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
+    /**
+     * 解析阶段：解密 → 解压 → 二进制反序列化 → IR 构建。
+     * 这些步骤只读自己的输入、不碰任何共享可变状态，可以并行。
+     * 并发度按堆大小收紧：解析峰值内存约为单模型解压后体积的数倍，
+     * 低端机（小堆）并发过高会直接把「加载慢」变成「闪退」。
+     */
+    private static final ThreadPoolExecutor modelParseExecutor = new ThreadPoolExecutor(
+            resolveParseThreadCount(), resolveParseThreadCount(), 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
             r -> {
-                Thread t = new Thread(r, "YSM-Model-Parse-Thread");
+                Thread t = new Thread(r, "YSM-Model-Parse");
                 t.setDaemon(true);
                 return t;
             }
     );
+
+    /**
+     * 组装阶段必须是单线程：{@link ModelAssemblyFactory} 持有静态 primaryAssembly，
+     * 非 primary assembly 会按引用 alias 它的动画表，并发组装会互相覆盖。
+     */
+    private static final ThreadPoolExecutor modelAssemblyExecutor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
+            r -> {
+                Thread t = new Thread(r, "YSM-Model-Assembly");
+                t.setDaemon(true);
+                return t;
+            }
+    );
+
+    private static int resolveParseThreadCount() {
+        int cpus = Runtime.getRuntime().availableProcessors();
+        long maxHeapMb = Runtime.getRuntime().maxMemory() >> 20;
+        // 单个模型解析期的峰值包含解压明文、反序列化 IR、BufferedImage 和烘焙顶点，
+        // 10 MB 的包能涨到几百 MB。低堆机器上并发越多越容易 OOM，所以按堆分级而不是只看核心数。
+        int byHeap;
+        if (maxHeapMb >= 32768) byHeap = 16;
+        else if (maxHeapMb >= 24576) byHeap = 12;
+        else if (maxHeapMb >= 16384) byHeap = 10;
+        else if (maxHeapMb >= 12288) byHeap = 8;
+        else if (maxHeapMb >= 8192) byHeap = 6;
+        else if (maxHeapMb >= 4096) byHeap = 4;
+        else if (maxHeapMb >= 2048) byHeap = 3;
+        else if (maxHeapMb >= 1024) byHeap = 2;
+        else byHeap = 1;
+        return Math.max(1, Math.min(byHeap, Math.max(1, cpus - 1)));
+    }
 
     private static final Map<UUID, ServerModelContext> serverModels = new ConcurrentHashMap<>();
 
@@ -246,6 +283,7 @@ public class ClientModelManager {
         List<String> previousModelIds = new ArrayList<>();
         List<String> updatedModelIds = new ArrayList<>();
         List<Boolean> isModelReadyList = new ArrayList<>();
+        List<Runnable> cachedParseTasks = new ArrayList<>();
 
         for (int i = 0; i < unkSize; i++) {
             long hash1 = buf.readVarLong();
@@ -275,15 +313,23 @@ public class ClientModelManager {
                     updatedModelIds.add(modelId);
                     isModelReadyList.add(isAuth);
                 } else {
-                    // 命中缓存
-                    modelPhraseExecutor.submit(() -> {
-                        if (clientKey == null) return;
+                    // 命中缓存：解析是异步的，必须计入 pendingModelsCount，
+                    // 否则「全部命中缓存」的批次会在这些模型组装完成前就宣告同步结束。
+                    // 但要等计数设好再提交，否则先完成的任务会把计数减成负数。
+                    File fileToParse = cachedFile;
+                    cachedParseTasks.add(() -> {
+                        byte[] keySnapshot = clientKey;
                         try {
-                            byte[] fileBytes = Files.readAllBytes(cachedFile.toPath());
-                            byte[] decompressed = YsmCrypt.read(fileBytes, clientKey);
-                            parseAndLoadModel(decompressed, modelId, isAuth);
+                            if (keySnapshot == null) {
+                                onModelAssembled();
+                                return;
+                            }
+                            byte[] fileBytes = Files.readAllBytes(fileToParse.toPath());
+                            byte[] decompressed = YsmCrypt.read(fileBytes, keySnapshot);
+                            parseAndLoadModel(decompressed, modelId, isAuth, ClientModelManager::onModelAssembled);
                         } catch (Exception e) {
                             YesSteveModel.LOGGER.error("[YSM] Failed to parse and load cached model: " + modelId, e);
+                            onModelAssembled();
                         }
                     });
                 }
@@ -367,7 +413,10 @@ public class ClientModelManager {
         }
 
         syncStep = 3;
-        pendingModelsCount.set(modelsToRequest.size());
+        boolean nothingPending = modelsToRequest.isEmpty() && cachedParseTasks.isEmpty();
+        pendingModelsCount.set(modelsToRequest.size() + cachedParseTasks.size());
+        cachedParseTasks.forEach(ClientModelManager::submitParse);
+        cachedParseTasks.clear();
 
         int garbageLen = 16 + SECURE_RANDOM.nextInt(48);
         byte[] garbage = new byte[garbageLen];
@@ -387,8 +436,9 @@ public class ClientModelManager {
             sendModelFile(ByteBuffer.wrap(result.data()));
         }
 
-        if (pendingModelsCount.get() == 0) {
-            modelPhraseExecutor.submit(() -> {
+        // 用提交前的快照判定：缓存解析任务是异步的，可能已经先把计数减到 0 并自己触发了 onSyncComplete。
+        if (nothingPending) {
+            modelAssemblyExecutor.execute(() -> {
                 YesSteveModel.LOGGER.info("[YSM] All models loaded from local cache. Handshake complete!");
                 onSyncComplete();
             });
@@ -427,69 +477,105 @@ public class ClientModelManager {
         if (ctx.bytesReceived >= totalSize) {
             byte[] fileBuffer = ctx.fileBuffer;
 
-            modelPhraseExecutor.submit(() -> {
-                if (clientKey == null) return;
+            submitParse(() -> {
+                byte[] serverKeySnapshot = serverKey;
+                byte[] clientKeySnapshot = clientKey;
+                if (serverKeySnapshot == null || clientKeySnapshot == null) {
+                    onModelAssembled();
+                    return;
+                }
                 try {
                     String folder = currentCacheFolderName != null ? currentCacheFolderName : "default_cache";
                     File cacheDir = ServerModelManager.CACHE_CLIENT.resolve(folder).toFile();
                     if (!cacheDir.exists()) cacheDir.mkdirs();
 
-                    byte[] cachedFileData = YsmCrypt.transcodeServerDataToClientCache(fileBuffer, serverKey, clientKey, hash1, hash2);
+                    // 一次转码同时拿到写盘数据和已解压明文，避免落盘后再 decrypt + zstd 解压一遍。
+                    YsmCrypt.TranscodedCache transcoded = YsmCrypt.transcodeAndDecodeServerData(
+                            fileBuffer, serverKeySnapshot, clientKeySnapshot, hash1, hash2);
 
-                    String legitFileName = YSMClientCache.generateCacheFileName(hash1, hash2, clientKey);
+                    String legitFileName = YSMClientCache.generateCacheFileName(hash1, hash2, clientKeySnapshot);
                     File outFile = new File(cacheDir, legitFileName);
 
                     try (FileOutputStream fos = new FileOutputStream(outFile)) {
-                        fos.write(cachedFileData);
+                        fos.write(transcoded.cacheData());
                     }
 
                     YesSteveModel.LOGGER.info("[YSM] Downloaded & Cached: " + outFile.getAbsolutePath());
-                    byte[] decompressed = YsmCrypt.read(cachedFileData, clientKey);
 
-                    parseAndLoadModel(decompressed, ctx.modelId, ctx.isAuth);
+                    parseAndLoadModel(transcoded.decompressedModel(), ctx.modelId, ctx.isAuth, ClientModelManager::onModelAssembled);
                 } catch (Exception e) {
                     YesSteveModel.LOGGER.error("[YSM] Failed to save/parse downloaded model: " + ctx.modelId, e);
-                } finally {
-                    if (pendingModelsCount.decrementAndGet() <= 0) {
-                        YesSteveModel.LOGGER.info("[YSM] All missing models downloaded and loaded successfully!");
-                        onSyncComplete();
-                    }
+                    onModelAssembled();
                 }
             });
         }
     }
 
 
-    private static void parseAndLoadModel(byte[] decompressed, String modelId, boolean isAuth) {
-        try {
-//            if (true) return;
-            // IR
+    /**
+     * 纯解析：解密已在外层做完，这里只把明文字节变成 IR，不触碰任何全局模型表。
+     * 失败返回 null，由调用方决定日志与计数。
+     */
+    @Nullable
+    private static ClientModelInfo parseModel(byte[] decompressed, String modelId) {
+        try (YSMBinaryDeserializer deserializer = new YSMBinaryDeserializer(decompressed, 32)) {
+            RawYsmModel rawModel = deserializer.deserializeKeepOpen();
+            YSMByteBuf reader = deserializer.getReader();
 
-            try (YSMBinaryDeserializer deserializer = new YSMBinaryDeserializer(decompressed, 32)) {
-                RawYsmModel rawModel = deserializer.deserializeKeepOpen();
-                YSMByteBuf reader = deserializer.getReader();
+            // 读取版本号
+            rawModel.footer.version = reader.readVarInt();// 65535 或 32
 
-                // 读取版本号
-                rawModel.footer.version = reader.readVarInt();// 65535 或 32
-
-                rawModel.footer.unkInt1 = reader.readVarInt(); // 待分析
-                if (rawModel.footer.unkInt1 != 0) {
-                    rawModel.footer.rand = reader.readString();
-                }
-
-                rawModel.footer.time = reader.readVarLong();
-
-                if (rawModel.footer.unkInt1 != 0) {
-                    rawModel.footer.extra = reader.readString();
-                    rawModel.footer.unkInt2 = reader.readVarInt();
-                }
-
-                // 组装到客户端模型
-                ClientModelInfo parsedBundle = YSMClientMapper.buildParsedBundle(rawModel, modelId);
-                onModelDataReceived(parsedBundle, modelId, false, isAuth);
+            rawModel.footer.unkInt1 = reader.readVarInt(); // 待分析
+            if (rawModel.footer.unkInt1 != 0) {
+                rawModel.footer.rand = reader.readString();
             }
+
+            rawModel.footer.time = reader.readVarLong();
+
+            if (rawModel.footer.unkInt1 != 0) {
+                rawModel.footer.extra = reader.readString();
+                rawModel.footer.unkInt2 = reader.readVarInt();
+            }
+
+            return YSMClientMapper.buildParsedBundle(rawModel, modelId);
         } catch (Exception e) {
-            YesSteveModel.LOGGER.error("[YSM] Failed to parse and load model: " + modelId, e);
+            YesSteveModel.LOGGER.error("[YSM] Failed to parse model: " + modelId, e);
+            return null;
+        }
+    }
+
+    /**
+     * 解析（并行）→ 组装（串行），两段分开提交，保证 buildAssembly 不会并发。
+     *
+     * @param onAssembled 在组装线程上、组装完成后执行（用来推进下载计数与同步完成判定）
+     */
+    private static void parseAndLoadModel(byte[] decompressed, String modelId, boolean isAuth, @Nullable Runnable onAssembled) {
+        ClientModelInfo parsed = parseModel(decompressed, modelId);
+        if (parsed == null) {
+            if (onAssembled != null) onAssembled.run();
+            return;
+        }
+        modelAssemblyExecutor.execute(() -> {
+            try {
+                onModelDataReceived(parsed, modelId, false, isAuth);
+            } catch (Exception e) {
+                YesSteveModel.LOGGER.error("[YSM] Failed to assemble model: " + modelId, e);
+            } finally {
+                if (onAssembled != null) onAssembled.run();
+            }
+        });
+    }
+
+    private static void submitParse(Runnable task) {
+        modelParseExecutor.execute(task);
+    }
+
+    private static void onModelAssembled() {
+        // 只有「恰好归零」才算本轮全部完成。用 <=0 会在 resetClientState 清零旧计数后，
+        // 被上一轮仍在跑的任务减成负数，从而误触发一次 onSyncComplete。
+        if (pendingModelsCount.decrementAndGet() == 0) {
+            YesSteveModel.LOGGER.info("[YSM] All missing models downloaded and loaded successfully!");
+            onSyncComplete();
         }
     }
 
@@ -510,7 +596,8 @@ public class ClientModelManager {
         serverKey = null;
         clientKey = null;
 
-        modelPhraseExecutor.getQueue().clear();
+        modelParseExecutor.getQueue().clear();
+        modelAssemblyExecutor.getQueue().clear();
 
         currentCacheFolderName = null;
         pendingModelsCount.set(0);

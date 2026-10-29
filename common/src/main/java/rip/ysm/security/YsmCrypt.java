@@ -6,6 +6,7 @@ import rip.ysm.algorithms.XChaCha20;
 import rip.ysm.algorithms.YsmZstd;
 import io.netty.buffer.Unpooled;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -217,7 +218,25 @@ public class YsmCrypt {
     }
 
 
+    /**
+     * 一次转码同时产出「写盘用的客户端缓存」和「已解压的模型明文」。
+     * serverData 在转码过程中本来就被完整解密过一次，若调用方再对写盘结果调用 {@link #read}
+     * 就会把解密 + zstd 解压整份重做一遍，这里是同一条链路的复用。
+     *
+     * @param decompressedModel 仅在 {@code decode} 为 true 时有值
+     */
+    public record TranscodedCache(byte[] cacheData, byte[] decompressedModel) {
+    }
+
     public static byte[] transcodeServerDataToClientCache(byte[] serverData, byte[] serverKey, byte[] clientKey, long hash1, long hash2) throws Exception {
+        return transcodeServerData(serverData, serverKey, clientKey, hash1, hash2, false).cacheData();
+    }
+
+    public static TranscodedCache transcodeAndDecodeServerData(byte[] serverData, byte[] serverKey, byte[] clientKey, long hash1, long hash2) throws Exception {
+        return transcodeServerData(serverData, serverKey, clientKey, hash1, hash2, true);
+    }
+
+    private static TranscodedCache transcodeServerData(byte[] serverData, byte[] serverKey, byte[] clientKey, long hash1, long hash2, boolean decode) throws Exception {
 
         try (YSMByteBuf buf = new YSMByteBuf(Unpooled.wrappedBuffer(serverData))) {
             int headerStart = buf.getRawBuf().readerIndex();
@@ -247,6 +266,11 @@ public class YsmCrypt {
             byte[] plainText = modifiedChaChaDecrypt(serverData, headerEnd, payloadEnd - headerEnd, chachaKeyS, chachaIvS, SEED_CACHE_DECRYPTION);
             mt19937XorInPlace(plainText, serverKey, SEED_KEY_DERIVATION);
 
+            // plainText 此刻就是「2 字节头 + padding + zstd 载荷」，与 read() 解密后得到的中间态完全一致。
+            // 必须在被客户端密钥再次异或覆盖之前取走；且 YsmZstd.decompress 内部 washInPlace 会就地
+            // 改写入参，直接解压 plainText 会破坏下面要写盘的密文，所以复制压缩载荷（远小于解压结果）。
+            byte[] payloadCopy = decode ? Arrays.copyOf(plainText, plainText.length) : null;
+
             // local shell
             byte[] chachaKeyC = Arrays.copyOfRange(clientKey, 0, 32);
             byte[] chachaIvC = Arrays.copyOfRange(clientKey, 32, 56);
@@ -264,7 +288,8 @@ public class YsmCrypt {
             long realHash = calculatedHash ^ hash1 ^ hash2;
 
             finalBuf.putLong(realHash);
-            return finalBuf.array();
+            byte[] decompressedModel = payloadCopy != null ? decompressPayload(payloadCopy) : null;
+            return new TranscodedCache(finalBuf.array(), decompressedModel);
         }
     }
 
@@ -489,10 +514,14 @@ public class YsmCrypt {
             byte[] plainText = modifiedChaChaDecrypt(cacheFileData, headerEnd, payloadEnd - headerEnd, chachaKeyC, chachaIvC, SEED_CACHE_DECRYPTION);
             mt19937XorInPlace(plainText, clientKey, SEED_KEY_DERIVATION);
 
-            int n = ((plainText[0] & 0xFF) | ((plainText[1] & 0xFF) << 8)) & 0x3FF;
-            int zstdOffset = 2 + n;
-
-            return YsmZstd.decompress(plainText, zstdOffset, plainText.length - zstdOffset);
+            return decompressPayload(plainText);
         }
+    }
+
+    /** 载荷布局：2 字节头（低 10 位为 padding 长度）+ padding + zstd 数据。 */
+    private static byte[] decompressPayload(byte[] plainText) throws IOException {
+        int n = ((plainText[0] & 0xFF) | ((plainText[1] & 0xFF) << 8)) & 0x3FF;
+        int zstdOffset = 2 + n;
+        return YsmZstd.decompress(plainText, zstdOffset, plainText.length - zstdOffset);
     }
 }
