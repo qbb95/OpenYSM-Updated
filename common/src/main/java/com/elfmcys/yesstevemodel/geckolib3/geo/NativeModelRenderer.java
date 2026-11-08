@@ -31,6 +31,16 @@ public class NativeModelRenderer {
         renderMesh(buffer, pose, model, boneParams, stateBuffer, textureIndex, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, null);
     }
 
+    /**
+     * 只把顶点写进给定的 {@link VertexConsumer}：不碰 GPU 直写路径，也不用 native SIMD 路径。
+     * <p>
+     * 用于外部捕获场景（例如 RealCamera 的模型绑定视图 / 绑定计算把几何从 SubmitNodeCollector 收走），
+     * 这种场景下渲染是延迟发生的，GPU / 帧缓冲直写既画不到捕获目标上，也没有意义。
+     */
+    public static void renderVertices(VertexConsumer buffer, PoseStack.Pose pose, GeoModel model, float[] boneParams, float[] stateBuffer, int textureIndex, int renderPartMask, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+        renderModel(buffer, pose, projectionModelViewMatrix, OptiFineDetector.isOptifinePresent(), model, boneParams, stateBuffer, textureIndex, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, true);
+    }
+
     public static void renderMesh(VertexConsumer buffer, PoseStack.Pose pose, GeoModel model, float[] boneParams, float[] stateBuffer, int textureIndex, int renderPartMask, int packedLight, int packedOverlay, float red, float green, float blue, float alpha, Identifier textureLocation) {
         OculusCompat.updatePBRState();
         boolean isCompatMode = OptiFineDetector.isOptifinePresent() || GeneralConfig.USE_COMPATIBILITY_RENDERER.get();

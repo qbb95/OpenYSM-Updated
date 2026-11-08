@@ -95,7 +95,13 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends Player, T extend
         float savedYHeadRot = 0.0f, savedYHeadRotO = 0.0f;
         float savedYRot = 0.0f, savedYRotO = 0.0f;
         float savedXRot = 0.0f, savedXRotO = 0.0f;
-        boolean syncRotationsForPreview = com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer.isPreview() && entity != null;
+        // 外部捕获（RealCamera 的模型绑定视图等）也会临时改写实体的 bodyYaw/headYaw/xRot，
+        // 但不写对应的上一帧字段（lastBodyYaw/yHeadRotO/yRotO/xRotO）——它假定权威旋转全在
+        // render state 里。若这里仍按 rotLerp(partialTick, 上一帧, 当前) 采样，每个 tick
+        // partialTick 从 0 走到 1 就会让身体朝向在"真实朝向"和"被改写的朝向"之间来回摆一次，
+        // 表现为模型不停旋转抽搐。因此外部捕获同样按 render state 锁定四个旋转。
+        boolean syncRotationsForPreview = (com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer.isPreview()
+                || com.elfmcys.yesstevemodel.client.renderer.RenderContext.isExternalCapture()) && entity != null;
         if (syncRotationsForPreview) {
             savedYBodyRot = entity.yBodyRot;
             savedYBodyRotO = entity.yBodyRotO;
