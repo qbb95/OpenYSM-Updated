@@ -1,9 +1,28 @@
-# Experimental Fabric 26.2 port — alpha.2
+# Experimental Fabric 26.2 port — alpha.3
 
 Local port of snapshot `bcfa3c355e6252618e68d7c61ef8ff03455ab64c` from
 `qbb95/OpenYSM-Updated`. Fabric only; Java 25, Minecraft 26.2, Fabric Loader 0.20.1.
 Build with `./gradlew :fabric:build`. The production artifact is
-`fabric/build/libs/openysm-fabric-2.6.6.0+26.2-alpha.2.jar`.
+`fabric/build/libs/openysm-fabric-2.6.6.0+26.2-alpha.3.jar`.
+
+## Alpha.3 loading changes
+
+Remove the sender's 5 ms polling delay per model chunk and wait on the actual
+write-completion callback. Prioritize the joining player's model, nearby players
+(including simultaneous joiners), and the configured fallback before the remaining
+catalog. Keep fresh downloads parallel; parse a full local cache in a separate
+ordered background lane to avoid startup allocation bursts.
+
+The alpha.3 production JAR completed a separate Windows dedicated-server test
+with two clients, both starting with empty encrypted model caches. Selected Ame
+and KAngel models were ready in about one second; the complete 1,146-entry
+catalog took 28 seconds on each client. These are loopback measurements with a
+warm server cache, 8 GiB client heaps, and 1,116 unique downloaded files.
+They are not Internet performance guarantees. Other detailed measurements below
+refer to the historical alpha.2 checkpoint `e5708a2`.
+
+Focused write-completion, transfer-order and 18 concurrent download/cache
+roundtrip checks were added and passed alongside the existing checks.
 
 ## Publication status
 

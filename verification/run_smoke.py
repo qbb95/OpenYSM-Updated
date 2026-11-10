@@ -37,10 +37,10 @@ def argfile(name, arguments):
                                 for a in arguments), encoding='utf8')
     return '@' + str(target)
 
-sources = [here / 'WireBoundsSmoke.java', here / 'RenderSmoke.java', here / 'OptimizationSmoke.java']
+sources = [here / 'WireBoundsSmoke.java', here / 'RenderSmoke.java', here / 'OptimizationSmoke.java', here / 'ModelTransferSmoke.java', here / 'ModelCacheSmoke.java']
 subprocess.run([executable('javac'), argfile('javac.args',
     ['-proc:none', '-cp', classpath, '-d', classes, *sources])], cwd=repo, check=True)
-tests = [('WireBoundsSmoke', []), ('RenderSmoke', [])]
+tests = [('WireBoundsSmoke', []), ('RenderSmoke', []), ('ModelTransferSmoke', []), ('ModelCacheSmoke', [])]
 if options.legacy_model:
     tests.append(('OptimizationSmoke', [output / 'cache-fixtures', options.legacy_model.resolve()]))
 else:
