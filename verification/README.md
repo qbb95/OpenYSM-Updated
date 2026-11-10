@@ -31,6 +31,17 @@ are allowed to use; the verification run used the original Ame legacy model.
 `--java-home` and `--classpath-file` can override the default JDK and classpath.
 
 See [PORT-26.2.md](../PORT-26.2.md) for the separate production-JAR dedicated-server
-test, two-client animation checks, measured memory/reload changes, and limits.
+test, two-client animation checks, measured loading/reload behavior, and limits.
 These focused checks do not establish Linux hosting, shader/mod compatibility,
 authenticated multiplayer, or visual correctness of every catalog entry.
+
+- `ModelBackendSmoke` verifies Java backend initialization without an SMID flag.
+- `MixinTargetsSmoke` resolves the configured mixin targets against this exact
+  Minecraft runtime rather than relying on stale method names.
+- `launcher_jvm.py` resolves required JVM options from exact Mojang metadata;
+  standalone arguments and OS rules are retained. See [LAUNCHING.md](LAUNCHING.md)
+  for the Windows startup regression, its baseline without YSM and the corrected
+  launch configuration. This helper is not included in the production mod JAR.
+- `ModelTransferSmoke` covers prioritized manifest ordering and packet write
+  completion, errors, timeout, interruption and one outstanding producer write.
+- `ModelCacheSmoke` verifies 18 concurrent encrypted download/cache roundtrips.

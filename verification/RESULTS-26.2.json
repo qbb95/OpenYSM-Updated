@@ -1,0 +1,498 @@
+{
+  "minecraft": "26.2",
+  "build": "alpha.4",
+  "status": "PASS",
+  "jar": "YesSteveModel-26.2-Fabric-unofficial-alpha.4.jar",
+  "sha256": "e08d26faa0176cbaafe191b9a2c79b073e7f6f70d357d435faf181f5b33c4d1f",
+  "server_and_clients_same_binary": true,
+  "native_backend": "Java; legacy YSM native libraries not loaded",
+  "environment": {
+    "os": "Windows",
+    "graphics": "OpenGL / RTX 5090",
+    "java": "25.0.5+8",
+    "fabric_loader": "0.20.1",
+    "client_heap_gib": 8,
+    "server_heap_gib": 4,
+    "network": "loopback; offline test identities; warm server/filesystem cache"
+  },
+  "catalog": {
+    "original_revision": "1749b46467acea11694891c01ede24914b22dc6c",
+    "original_files": 1114,
+    "registered_entries": 1146,
+    "unique_downloads": 1116,
+    "custom_models_preinstalled_on_clients": 0
+  },
+  "cold_full_catalog_seconds": {
+    "PortAlice": 27,
+    "PortBob": 27
+  },
+  "mixed_reconnect_full_catalog_seconds": {
+    "PortAlice": 41,
+    "PortBob": 25
+  },
+  "details": {
+    "minecraft": "26.2",
+    "stages": {
+      "cold": {
+        "PortAlice": {
+          "ready_ms": {
+            "Overdose_Ame-chan.ysm": 364,
+            "Overdose_Kangel.ysm": 375
+          },
+          "all_completed": true,
+          "registry_lines": [
+            "[07:49:04] [Render thread/INFO]: [STDOUT]: [CATALOG-PROBE] observer=PortAlice registered=1146 epochMs=1794293344947",
+            "[07:49:04] [Render thread/INFO]: [STDOUT]: [STATUS-PROBE] observer=PortAlice registered=1146 epochMs=1794293344981"
+          ],
+          "errors": []
+        },
+        "PortBob": {
+          "ready_ms": {
+            "Overdose_Ame-chan.ysm": 242,
+            "Overdose_Kangel.ysm": 244
+          },
+          "all_completed": true,
+          "registry_lines": [
+            "[07:49:04] [Render thread/INFO]: [STDOUT]: [CATALOG-PROBE] observer=PortBob registered=1146 epochMs=1794293344966",
+            "[07:49:05] [Render thread/INFO]: [STDOUT]: [STATUS-PROBE] observer=PortBob registered=1146 epochMs=1794293345135"
+          ],
+          "errors": []
+        }
+      },
+      "mixed-reconnect": {
+        "PortAlice": {
+          "ready_ms": {
+            "Overdose_Ame-chan.ysm": 1079,
+            "Overdose_Kangel.ysm": 1132
+          },
+          "all_completed": true,
+          "registry_lines": [
+            "[07:54:55] [Render thread/INFO]: [STDOUT]: [CATALOG-PROBE] observer=PortAlice registered=1146 epochMs=1794293695253",
+            "[07:54:55] [Render thread/INFO]: [STDOUT]: [STATUS-PROBE] observer=PortAlice registered=1146 epochMs=1794293695487"
+          ],
+          "errors": []
+        },
+        "PortBob": {
+          "ready_ms": {
+            "Overdose_Ame-chan.ysm": 208,
+            "Overdose_Kangel.ysm": 209
+          },
+          "all_completed": true,
+          "registry_lines": [
+            "[07:54:39] [Render thread/INFO]: [STDOUT]: [CATALOG-PROBE] observer=PortBob registered=1146 epochMs=1794293679176",
+            "[07:54:55] [Render thread/INFO]: [STDOUT]: [STATUS-PROBE] observer=PortBob registered=1146 epochMs=1794293695514"
+          ],
+          "errors": []
+        }
+      }
+    },
+    "native_backend": "Java, no OYSM_DISABLE_SMID VM flag",
+    "clean_shutdown": true,
+    "jar_sha256": "e08d26faa0176cbaafe191b9a2c79b073e7f6f70d357d435faf181f5b33c4d1f",
+    "cache": {
+      "PortAlice": {
+        "files": 1116,
+        "bytes": 897622270
+      },
+      "PortBob": {
+        "files": 1116,
+        "bytes": 897622270
+      }
+    },
+    "observed_animations": {
+      "PortAlice": {
+        "remote_target": "PortBob",
+        "states": [
+          "extra0",
+          "extra1",
+          "extra2",
+          "extra3",
+          "extra4",
+          "extra5",
+          "extra6",
+          "extra7",
+          "hold_mainhand:empty",
+          "hold_offhand:empty",
+          "idle",
+          "jump",
+          "parallel0",
+          "parallel1",
+          "parallel3",
+          "pre_parallel0",
+          "pre_parallel1",
+          "pre_parallel2",
+          "run",
+          "sneak",
+          "sneaking",
+          "swing_hand",
+          "walk"
+        ],
+        "forearm_x_range_radians": [
+          0.0,
+          2.0301147
+        ]
+      },
+      "PortBob": {
+        "remote_target": "PortAlice",
+        "states": [
+          "extra0",
+          "extra1",
+          "extra2",
+          "extra3",
+          "extra4",
+          "extra5",
+          "extra6",
+          "extra7",
+          "hold_mainhand:bow",
+          "hold_mainhand:empty",
+          "hold_offhand:empty",
+          "hold_offhand:shield",
+          "idle",
+          "jump",
+          "parallel0",
+          "parallel1",
+          "parallel3",
+          "pre_parallel0",
+          "pre_parallel1",
+          "pre_parallel2",
+          "run",
+          "sneak",
+          "sneaking",
+          "swing_hand",
+          "use_mainhand:bow",
+          "use_offhand:shield",
+          "walk"
+        ],
+        "forearm_x_range_radians": [
+          0.0,
+          2.0301147
+        ]
+      }
+    },
+    "passed": true
+  },
+  "limits": [
+    "Not every model/animation visually inspected. Linux, public authenticated hosting, proxies, shaders and other mod combinations unverified.",
+    "Full catalog remains resident. Avatar readiness starts at model sync, not process startup."
+  ],
+  "launcher_configuration": {
+    "windows_hotspot_stack_shadow_pages": 32,
+    "26.3_required_mojang_arguments_preserved": true,
+    "26.2_extra_stack_margin": true,
+    "documentation": "LAUNCHING.md"
+  },
+  "first_corrected_full_matrix": {
+    "minecraft": "26.2",
+    "stages": {
+      "cold": {
+        "PortAlice": {
+          "ready_ms": {
+            "Overdose_Ame-chan.ysm": 364,
+            "Overdose_Kangel.ysm": 375
+          },
+          "all_completed": true,
+          "registry_lines": [
+            "[07:49:04] [Render thread/INFO]: [STDOUT]: [CATALOG-PROBE] observer=PortAlice registered=1146 epochMs=1794293344947",
+            "[07:49:04] [Render thread/INFO]: [STDOUT]: [STATUS-PROBE] observer=PortAlice registered=1146 epochMs=1794293344981"
+          ],
+          "errors": []
+        },
+        "PortBob": {
+          "ready_ms": {
+            "Overdose_Ame-chan.ysm": 242,
+            "Overdose_Kangel.ysm": 244
+          },
+          "all_completed": true,
+          "registry_lines": [
+            "[07:49:04] [Render thread/INFO]: [STDOUT]: [CATALOG-PROBE] observer=PortBob registered=1146 epochMs=1794293344966",
+            "[07:49:05] [Render thread/INFO]: [STDOUT]: [STATUS-PROBE] observer=PortBob registered=1146 epochMs=1794293345135"
+          ],
+          "errors": []
+        }
+      },
+      "mixed-reconnect": {
+        "PortAlice": {
+          "ready_ms": {
+            "Overdose_Ame-chan.ysm": 913,
+            "Overdose_Kangel.ysm": 981
+          },
+          "all_completed": true,
+          "registry_lines": [
+            "[07:50:51] [Render thread/INFO]: [STDOUT]: [CATALOG-PROBE] observer=PortAlice registered=1146 epochMs=1794293451392",
+            "[07:50:51] [Render thread/INFO]: [STDOUT]: [STATUS-PROBE] observer=PortAlice registered=1146 epochMs=1794293451593"
+          ],
+          "errors": []
+        },
+        "PortBob": {
+          "ready_ms": {
+            "Overdose_Ame-chan.ysm": 271,
+            "Overdose_Kangel.ysm": 273
+          },
+          "all_completed": true,
+          "registry_lines": [
+            "[07:50:33] [Render thread/INFO]: [STDOUT]: [CATALOG-PROBE] observer=PortBob registered=1146 epochMs=1794293433244",
+            "[07:50:51] [Render thread/INFO]: [STDOUT]: [STATUS-PROBE] observer=PortBob registered=1146 epochMs=1794293451821"
+          ],
+          "errors": []
+        }
+      }
+    },
+    "native_backend": "Java, no OYSM_DISABLE_SMID VM flag",
+    "clean_shutdown": true,
+    "jar_sha256": "e08d26faa0176cbaafe191b9a2c79b073e7f6f70d357d435faf181f5b33c4d1f",
+    "cache": {
+      "PortAlice": {
+        "files": 1116,
+        "bytes": 897622270
+      },
+      "PortBob": {
+        "files": 1116,
+        "bytes": 897622270
+      }
+    },
+    "observed_animations": {
+      "PortAlice": {
+        "remote_target": "PortBob",
+        "states": [
+          "extra0",
+          "extra1",
+          "extra2",
+          "extra3",
+          "extra4",
+          "extra5",
+          "extra6",
+          "extra7",
+          "hold_mainhand:empty",
+          "hold_offhand:empty",
+          "idle",
+          "jump",
+          "parallel0",
+          "parallel1",
+          "parallel3",
+          "pre_parallel0",
+          "pre_parallel1",
+          "pre_parallel2",
+          "run",
+          "sneak",
+          "sneaking",
+          "swing_hand",
+          "walk"
+        ],
+        "forearm_x_range_radians": [
+          0.0,
+          2.0301147
+        ]
+      },
+      "PortBob": {
+        "remote_target": "PortAlice",
+        "states": [
+          "extra0",
+          "extra1",
+          "extra2",
+          "extra3",
+          "extra4",
+          "extra5",
+          "extra6",
+          "extra7",
+          "hold_mainhand:bow",
+          "hold_mainhand:empty",
+          "hold_offhand:empty",
+          "hold_offhand:shield",
+          "idle",
+          "jump",
+          "parallel0",
+          "parallel1",
+          "parallel3",
+          "pre_parallel0",
+          "pre_parallel1",
+          "pre_parallel2",
+          "run",
+          "sneak",
+          "sneaking",
+          "swing_hand",
+          "use_mainhand:bow",
+          "use_offhand:shield",
+          "walk"
+        ],
+        "forearm_x_range_radians": [
+          0.0,
+          2.0301147
+        ]
+      }
+    },
+    "passed": true
+  },
+  "repeat_reconnect_passed": true,
+  "server_reload_lines": [
+    "[07:49:55] [Server thread/INFO]: [Not Secure] [Server] RELOAD_RESPONSIVENESS_26.2",
+    "[07:49:55] [Server thread/INFO]: §6§l【§aYSM§6§l】§eThere is one another reloading task in progress.",
+    "[07:49:57] [Server thread/INFO]: §6§l【§aYSM§6§l】§eAll models have been reloaded, use time: 1268.965ms"
+  ],
+  "baseline_startup_trials": [
+    {
+      "iteration": 1,
+      "mode": "fabric",
+      "xss": "",
+      "clients": {
+        "PortAlice": {
+          "exit_before_end": null,
+          "elapsed": 30.04,
+          "resource_reload": true,
+          "atlases_created": 12,
+          "last_lines": [
+            "\tat knot//com.mojang.realmsclient.RealmsAvailability.lambda$check$0(RealmsAvailability.java:48)",
+            "\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "\tat java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        },
+        "PortBob": {
+          "exit_before_end": null,
+          "elapsed": 30.04,
+          "resource_reload": true,
+          "atlases_created": 12,
+          "last_lines": [
+            "\tat knot//com.mojang.realmsclient.RealmsAvailability.lambda$check$0(RealmsAvailability.java:48)",
+            "\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "\tat java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        }
+      }
+    },
+    {
+      "iteration": 2,
+      "mode": "fabric",
+      "xss": "",
+      "clients": {
+        "PortAlice": {
+          "exit_before_end": null,
+          "elapsed": 30.04,
+          "resource_reload": true,
+          "atlases_created": 12,
+          "last_lines": [
+            "\tat knot//com.mojang.realmsclient.RealmsAvailability.lambda$check$0(RealmsAvailability.java:48)",
+            "\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "\tat java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        },
+        "PortBob": {
+          "exit_before_end": null,
+          "elapsed": 30.04,
+          "resource_reload": true,
+          "atlases_created": 12,
+          "last_lines": [
+            "\tat knot//com.mojang.realmsclient.RealmsAvailability.lambda$check$0(RealmsAvailability.java:48)",
+            "\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "\tat java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        }
+      }
+    },
+    {
+      "iteration": 3,
+      "mode": "fabric",
+      "xss": "",
+      "clients": {
+        "PortAlice": {
+          "exit_before_end": null,
+          "elapsed": 30.08,
+          "resource_reload": true,
+          "atlases_created": 12,
+          "last_lines": [
+            "\tat knot//com.mojang.realmsclient.RealmsAvailability.lambda$check$0(RealmsAvailability.java:48)",
+            "\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "\tat java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        },
+        "PortBob": {
+          "exit_before_end": null,
+          "elapsed": 30.08,
+          "resource_reload": true,
+          "atlases_created": 12,
+          "last_lines": [
+            "\tat knot//com.mojang.realmsclient.RealmsAvailability.lambda$check$0(RealmsAvailability.java:48)",
+            "\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "\tat java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        }
+      }
+    },
+    {
+      "iteration": 4,
+      "mode": "fabric",
+      "xss": "",
+      "clients": {
+        "PortAlice": {
+          "exit_before_end": null,
+          "elapsed": 30.05,
+          "resource_reload": true,
+          "atlases_created": 12,
+          "last_lines": [
+            "\tat knot//com.mojang.realmsclient.RealmsAvailability.lambda$check$0(RealmsAvailability.java:48)",
+            "\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "\tat java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        },
+        "PortBob": {
+          "exit_before_end": null,
+          "elapsed": 30.05,
+          "resource_reload": true,
+          "atlases_created": 12,
+          "last_lines": [
+            "\tat knot//com.mojang.realmsclient.RealmsAvailability.lambda$check$0(RealmsAvailability.java:48)",
+            "\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "\tat java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        }
+      }
+    },
+    {
+      "iteration": 5,
+      "mode": "fabric",
+      "xss": "",
+      "clients": {
+        "PortAlice": {
+          "exit_before_end": null,
+          "elapsed": 30.04,
+          "resource_reload": true,
+          "atlases_created": 12,
+          "last_lines": [
+            "\tat knot//com.mojang.realmsclient.RealmsAvailability.lambda$check$0(RealmsAvailability.java:48)",
+            "\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "\tat java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        },
+        "PortBob": {
+          "exit_before_end": null,
+          "elapsed": 30.04,
+          "resource_reload": true,
+          "atlases_created": 12,
+          "last_lines": [
+            "\tat knot//com.mojang.realmsclient.RealmsAvailability.lambda$check$0(RealmsAvailability.java:48)",
+            "\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "\tat java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        }
+      }
+    }
+  ]
+}

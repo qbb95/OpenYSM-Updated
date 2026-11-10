@@ -1,9 +1,48 @@
-# Experimental Fabric 26.2 port — alpha.3
+# Experimental Fabric 26.2 port — alpha.4
 
 Local port of snapshot `bcfa3c355e6252618e68d7c61ef8ff03455ab64c` from
 `qbb95/OpenYSM-Updated`. Fabric only; Java 25, Minecraft 26.2, Fabric Loader 0.20.1.
 Build with `./gradlew :fabric:build`. The production artifact is
-`fabric/build/libs/openysm-fabric-2.6.6.0+26.2-alpha.3.jar`.
+`fabric/build/libs/openysm-fabric-2.6.6.0+26.2-alpha.4.jar`.
+
+## alpha.4 release-candidate regression results
+
+The Java model backend is now the default: legacy YSM native libraries are not
+loaded or extracted, and no `-DOYSM_DISABLE_SMID=1` argument is required. Declare
+bundled Fabric API, Architectury, Forge Config API Port and Cardinal Components
+as required runtime dependencies so Fabric does not silently omit them.
+
+The exact production JAR (`SHA-256 e08d26faa0176cbaafe191b9a2c79b073e7f6f70d357d435faf181f5b33c4d1f`) passed the dedicated-server
+matrix with two independent clients, 8 GiB heaps per client and 4 GiB on the server.
+Neither client had custom models preinstalled. Both empty-cache catalogs loaded
+all 1,146 entries and 1,116 unique encrypted files. Remote movement/swings,
+extra0-extra7, bow/shield use, model/texture changes, previews/search input,
+tracking-range return, asynchronous reload responsiveness and overlap rejection
+were exercised. Final clients and server exited with code 0.
+
+| Local observation | Alice | Bob |
+| --- | ---: | ---: |
+| Initial empty-cache complete catalog | 27 s | 27 s |
+| Reconnect complete catalog (Alice cached, Bob empty) | 41 s | 25 s |
+
+Bob's two priority avatars were ready within **209 ms** of model synchronization
+on the later empty-cache join. These are loopback results with warm server and
+filesystem caches, not process-startup timings or Internet guarantees. Full
+catalog timings use second-resolution logs; avatar probes use milliseconds.
+The full catalog remains resident after loading.
+
+The corrected Windows launcher preserves Mojang's required 26.3 JVM options,
+including `-XX:StackShadowPages=32`. The same stack margin is also used explicitly
+for the 26.2 Windows regression configuration. A prior 26.3 native JVM failure
+was reproduced with an empty mods folder; ten baseline client startups passed
+after correcting the stack margin. This does not patch HotSpot itself or prove
+that every historical native crash had the same cause. See
+[launcher diagnosis](verification/LAUNCHING.md) and
+[machine-readable results](verification/RESULTS-26.2.json).
+
+Focused checks passed, including the Java backend without an SMID flag, actual
+Minecraft mixin target bindings, concurrent crypto/cache roundtrips, packet
+bounds, callback-based transfer ordering and immutable render snapshots.
 
 ## Alpha.3 loading changes
 
