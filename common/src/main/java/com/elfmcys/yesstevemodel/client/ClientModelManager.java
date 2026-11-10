@@ -76,6 +76,16 @@ public class ClientModelManager {
             }
     );
 
+    // A warm catalog makes every file available at once. Keep that background
+    // workload in manifest order and avoid a burst of simultaneous image/IR
+    // allocations while the render thread is still joining the world.
+    private static final ThreadPoolExecutor cachedModelParseExecutor = new ThreadPoolExecutor(
+            1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), r -> {
+                Thread thread = new Thread(r, "YSM-Cached-Model-Parse");
+                thread.setDaemon(true);
+                return thread;
+            });
+
     /**
      * 组装阶段必须是单线程：{@link ModelAssemblyFactory} 持有静态 primaryAssembly，
      * 非 primary assembly 会按引用 alias 它的动画表，并发组装会互相覆盖。
@@ -139,6 +149,8 @@ public class ClientModelManager {
         public byte[] fileBuffer;
         public int totalSize;
         public int bytesReceived;
+        public boolean downloadSubmitted;
+        public final List<ServerModelContext> aliases = new ArrayList<>();
 
         public ServerModelContext(long hash1, long hash2, String modelId, boolean isAuth, int isCustomSkinModel, int version) {
             this.uuid = new UUID(hash1, hash2);
@@ -230,6 +242,11 @@ public class ClientModelManager {
     }
 
     private static void handlePacket01(byte[] decryptedBuffer) throws Exception {
+        if (decryptedBuffer.length < 56) return;
+        try (YSMByteBuf header = new YSMByteBuf(Unpooled.wrappedBuffer(decryptedBuffer))) {
+            header.skipGarbageHeader();
+            if (header.readVarInt() != 1) return;
+        }
         key1 = new byte[56];
         System.arraycopy(decryptedBuffer, decryptedBuffer.length - 56, key1, 0, 56);
         syncStep = 2;
@@ -261,6 +278,7 @@ public class ClientModelManager {
     private static void handlePacket03(YSMByteBuf buf) throws Exception {
         buf.skipGarbageHeader();
         int type = buf.readVarInt(); // expect 3
+        if (type != 3) return;
         long folderHash = buf.readVarLong();
         currentCacheFolderName = Long.toHexString(folderHash);
 
@@ -274,7 +292,8 @@ public class ClientModelManager {
         if (!cacheDir.exists()) cacheDir.mkdirs();
 
         Map<UUID, File> localCacheMap = YSMClientCache.buildCacheIndex(cacheDir, clientKey);
-        List<ModelHash> modelsToRequest = new ArrayList<>();
+        Set<ModelHash> modelsToRequest = new LinkedHashSet<>();
+        int missingModelCount = 0;
 
         int unkSize = buf.readVarInt();
         onSyncProgress(unkSize);
@@ -298,7 +317,10 @@ public class ClientModelManager {
             int version = buf.readVarInt(); // 对于文件夹未加密的模型，为65535
 
             ServerModelContext ctx = new ServerModelContext(hash1, hash2, modelId, isAuth, isCustomSkinModel, version);
-            serverModels.put(ctx.uuid, ctx);
+            // Distinct model IDs can share identical content. Download that
+            // content once, then assemble every advertised ID separately.
+            ServerModelContext transfer = serverModels.putIfAbsent(ctx.uuid, ctx);
+            (transfer == null ? ctx : transfer).aliases.add(ctx);
             validServerModelIds.add(modelId);
 
             File cachedFile = localCacheMap.get(ctx.uuid);
@@ -307,7 +329,7 @@ public class ClientModelManager {
             boolean alreadyInMemory = modelAssemblyMap != null && modelAssemblyMap.containsKey(modelId);
 
             if (isFileValid) {
-                YesSteveModel.LOGGER.info("[YSM] Cache HIT & Validated: " + ctx.uuid);
+                YesSteveModel.LOGGER.debug("[YSM] Cache HIT & Validated: " + ctx.uuid);
                 if (alreadyInMemory) {
                     previousModelIds.add(modelId);
                     updatedModelIds.add(modelId);
@@ -334,8 +356,9 @@ public class ClientModelManager {
                     });
                 }
             } else {
-                YesSteveModel.LOGGER.info("[YSM] Cache MISS or Invalid: " + ctx.uuid + " -> Requesting...");
+                YesSteveModel.LOGGER.debug("[YSM] Cache MISS or Invalid: {} -> Requesting...", ctx.uuid);
                 modelsToRequest.add(mHash);
+                missingModelCount++;
             }
         }
 
@@ -414,8 +437,8 @@ public class ClientModelManager {
 
         syncStep = 3;
         boolean nothingPending = modelsToRequest.isEmpty() && cachedParseTasks.isEmpty();
-        pendingModelsCount.set(modelsToRequest.size() + cachedParseTasks.size());
-        cachedParseTasks.forEach(ClientModelManager::submitParse);
+        pendingModelsCount.set(missingModelCount + cachedParseTasks.size());
+        cachedParseTasks.forEach(cachedModelParseExecutor::execute);
         cachedParseTasks.clear();
 
         int garbageLen = 16 + SECURE_RANDOM.nextInt(48);
@@ -459,10 +482,16 @@ public class ClientModelManager {
             YesSteveModel.LOGGER.warn("[YSM] Received unexpected file chunk for model: " + uuid);
             return;
         }
+        if (ctx.downloadSubmitted) return;
 
         int totalSize = buf.readVarInt();
         int chunkOffset = buf.readVarInt();
         int chunkLength = buf.readVarInt();
+        if (totalSize <= 0 || chunkLength <= 0 || chunkOffset < 0
+                || chunkOffset > totalSize || chunkLength > totalSize - chunkOffset
+                || chunkLength > buf.getRawBuf().readableBytes()) {
+            throw new IllegalArgumentException("Invalid model chunk bounds for " + ctx.modelId);
+        }
 
         // 首次接收时初始化缓冲区
         if (ctx.fileBuffer == null) {
@@ -470,18 +499,24 @@ public class ClientModelManager {
             ctx.totalSize = totalSize;
             ctx.bytesReceived = 0;
         }
+        if (ctx.totalSize != totalSize || chunkOffset != ctx.bytesReceived) {
+            throw new IllegalArgumentException("Unexpected model chunk order for " + ctx.modelId);
+        }
 
         buf.getRawBuf().readBytes(ctx.fileBuffer, chunkOffset, chunkLength);
         ctx.bytesReceived += chunkLength;
 
         if (ctx.bytesReceived >= totalSize) {
+            ctx.downloadSubmitted = true;
             byte[] fileBuffer = ctx.fileBuffer;
+            ctx.fileBuffer = null;
+            List<ServerModelContext> aliases = List.copyOf(ctx.aliases);
 
             submitParse(() -> {
                 byte[] serverKeySnapshot = serverKey;
                 byte[] clientKeySnapshot = clientKey;
                 if (serverKeySnapshot == null || clientKeySnapshot == null) {
-                    onModelAssembled();
+                    aliases.forEach(alias -> onModelAssembled());
                     return;
                 }
                 try {
@@ -500,12 +535,15 @@ public class ClientModelManager {
                         fos.write(transcoded.cacheData());
                     }
 
-                    YesSteveModel.LOGGER.info("[YSM] Downloaded & Cached: " + outFile.getAbsolutePath());
+                    YesSteveModel.LOGGER.debug("[YSM] Downloaded & Cached: " + outFile.getAbsolutePath());
 
-                    parseAndLoadModel(transcoded.decompressedModel(), ctx.modelId, ctx.isAuth, ClientModelManager::onModelAssembled);
+                    for (ServerModelContext alias : aliases) {
+                        parseAndLoadModel(transcoded.decompressedModel(), alias.modelId, alias.isAuth,
+                                ClientModelManager::onModelAssembled);
+                    }
                 } catch (Exception e) {
                     YesSteveModel.LOGGER.error("[YSM] Failed to save/parse downloaded model: " + ctx.modelId, e);
-                    onModelAssembled();
+                    aliases.forEach(alias -> onModelAssembled());
                 }
             });
         }
@@ -597,6 +635,7 @@ public class ClientModelManager {
         clientKey = null;
 
         modelParseExecutor.getQueue().clear();
+        cachedModelParseExecutor.getQueue().clear();
         modelAssemblyExecutor.getQueue().clear();
 
         currentCacheFolderName = null;
@@ -682,7 +721,7 @@ public class ClientModelManager {
     }
 
     public static Identifier getDefaultTexture() {
-        return defaultTexture.getResourceLocation().get();
+        return defaultTexture.getIdentifier().get();
     }
 
     public static <T extends IGuiWidget> T registerGuiWidget(T t) {
@@ -941,7 +980,7 @@ public class ClientModelManager {
             });
             if (obj instanceof Component component) {
                 if (Minecraft.getInstance().player != null) {
-                    Minecraft.getInstance().player.displayClientMessage(component, false);
+                    Minecraft.getInstance().player.sendSystemMessage(component);
                 }
                 YesSteveModel.LOGGER.error(component.getString(256));
             }

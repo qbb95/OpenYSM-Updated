@@ -24,7 +24,7 @@ public class EquippedItemAllTags extends LivingEntityFunction {
             return false;
         }
         for (int i = 1; i < arguments.size(); i++) {
-            Identifier key = arguments.getResourceLocation(context, i);
+            Identifier key = arguments.getIdentifier(context, i);
             if (key == null) {
                 return null;
             }

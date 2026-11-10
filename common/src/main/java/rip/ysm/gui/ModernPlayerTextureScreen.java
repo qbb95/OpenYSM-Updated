@@ -11,7 +11,7 @@ import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -50,9 +50,9 @@ public class ModernPlayerTextureScreen extends OptionScreen {
 
     private float yaw = 165.0f;
     private float pitch = -5.0f;
-    private float zoom = 80.0f;
+    private float zoom = 50.0f;
     private float offsetX = 0.0f;
-    private float offsetY = -60.0f;
+    private float offsetY = -20.0f;
     private boolean showGround = true;
 
     private boolean draggingPreview;
@@ -193,8 +193,8 @@ public class ModernPlayerTextureScreen extends OptionScreen {
 
     private void resetView() {
         offsetX = 0.0f;
-        offsetY = -60.0f;
-        zoom = 80.0f;
+        offsetY = -20.0f;
+        zoom = 50.0f;
         yaw = 165.0f;
         pitch = -5.0f;
     }
@@ -216,7 +216,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         hoveredIcon = null;
         for (IconButton btn : icons) {
             if (btn.contains(mouseX, mouseY)) {
@@ -224,11 +224,11 @@ public class ModernPlayerTextureScreen extends OptionScreen {
                 break;
             }
         }
-        super.render(g, mouseX, mouseY, partialTick);
+        super.extractRenderState(g, mouseX, mouseY, partialTick);
         for (IconButton btn : icons) drawIcon(g, btn);
     }
 
-    private void drawIcon(GuiGraphics g, IconButton btn) {
+    private void drawIcon(GuiGraphicsExtractor g, IconButton btn) {
         boolean hover = btn == hoveredIcon;
         int bg = hover ? 0x90171717 : 0x90000000;
         g.fill(btn.x, btn.y, btn.x + btn.size, btn.y + btn.size, bg);
@@ -292,26 +292,26 @@ public class ModernPlayerTextureScreen extends OptionScreen {
     }
 
     @Override
-    protected void renderExtras(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderExtras(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         g.fill(previewLeft, previewTop, previewRight, previewBottom, 0x66000000);
         renderPreview(g, partialTick);
     }
 
     @Override
-    protected void renderDescription(GuiGraphics g, int descY) {
+    protected void renderDescription(GuiGraphicsExtractor g, int descY) {
         if (hoveredIcon != null) {
             g.fill(panelLeft, descY, panelRight, descY + 28, 0x80000000);
-            g.drawString(this.font, hoveredIcon.tooltip, panelLeft + 6, descY + 10, -1, false);
+            g.text(this.font, hoveredIcon.tooltip, panelLeft + 6, descY + 10, -1, false);
             return;
         }
         if (hoveredRow instanceof AnimationRow row) {
             g.fill(panelLeft, descY, panelRight, descY + 28, 0x80000000);
-            g.drawString(this.font, row.getMessage(), panelLeft + 6, descY + 4, -1, false);
-            g.drawString(this.font, Component.literal(row.animKey).withStyle(ChatFormatting.GRAY), panelLeft + 6, descY + 16, 0xFFAAAAAA, false);
+            g.text(this.font, row.getMessage(), panelLeft + 6, descY + 4, -1, false);
+            g.text(this.font, Component.literal(row.animKey).withStyle(ChatFormatting.GRAY), panelLeft + 6, descY + 16, 0xFFAAAAAA, false);
         }
     }
 
-    private void renderPreview(GuiGraphics g, float partialTick) {
+    private void renderPreview(GuiGraphicsExtractor g, float partialTick) {
         if (this.minecraft == null || this.minecraft.player == null) return;
         if (!modelHolder.getAnimationStateMachine().isCurrentAnimation(currentAnimation)) {
             modelHolder.getAnimationStateMachine().setCurrentAnimation(currentAnimation);

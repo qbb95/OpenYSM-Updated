@@ -19,7 +19,7 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.GeoReplacedEntityRenderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.Identifier;
@@ -41,7 +41,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         addLayerRenderer(new CustomPlayerArmorLayer(context));
     }
 
-    public void render(Player player, AvatarRenderState renderState, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    public void render(Player player, AvatarRenderState renderState, float entityYaw, float partialTick, PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight) {
         PlayerCapability capability;
         if (SWarfareCompat.isPlayerAiming(player) || (capability = PlayerCapability.get(player).orElse(null)) == null) {
             return;
@@ -84,7 +84,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
                 }
             }
         }
-        return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && isVisible && !entity.isVehicle();
+        return !Minecraft.getInstance().options.hideGui && entity != minecraft.getCameraEntity() && isVisible && !entity.isVehicle();
     }
 
     @Override
@@ -117,7 +117,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
 
     // TODO: port to 1.21.4
 //    @Override
-//    protected void renderNameTag(AvatarRenderState entityRenderState, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+//    protected void renderNameTag(AvatarRenderState entityRenderState, Component component, PoseStack poseStack, DeferredBufferSource multiBufferSource, int i) {
 //        Scoreboard scoreboard;
 //        Objective displayObjective;
 //        if (PlayerPreviewEntity.isPreviewPlayer(player)) {

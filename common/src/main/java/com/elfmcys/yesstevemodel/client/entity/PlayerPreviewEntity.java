@@ -105,6 +105,9 @@ public final class PlayerPreviewEntity extends CustomPlayerEntity implements IPr
     private static class DummyPlayer extends AbstractClientPlayer {
         public DummyPlayer() {
             super(Minecraft.getInstance().level, createGameProfile());
+            // Since 26.2 the constructor leaves IDs unassigned. Render-state
+            // extraction reads the ID even for entities used only by the GUI.
+            setId(com.elfmcys.yesstevemodel.util.PreviewEntityIds.next());
         }
 
         private static GameProfile createGameProfile() {

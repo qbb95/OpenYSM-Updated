@@ -33,9 +33,9 @@ public class RawBoneKeyFrame {
     private IValue getValue(IValue value, double primitive, boolean isRotation, boolean flip) {
         if (value == null) {
             if (isRotation) {
-                return new FloatValue(RotationValue.convert((float) primitive, flip));
+                return FloatValue.of(RotationValue.convert((float) primitive, flip));
             }
-            return new FloatValue((float) primitive);
+            return FloatValue.of((float) primitive);
         }
         if (isRotation) {
             return new RotationValue(value, flip);

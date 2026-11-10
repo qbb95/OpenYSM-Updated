@@ -2,11 +2,14 @@
   "schemaVersion": 1,
   "id": "yes_steve_model",
   "version": "${version}",
-  "name": "Yes Steve Model",
+  "name": "OpenYSM (26.2 development port)",
   "description": "",
-  "authors": ["Tianjin Accessible Care Innovation Development Co., Ltd."],
+  "authors": [
+    "Tianjin Accessible Care Innovation Development Co., Ltd."
+  ],
   "contact": {
-    "homepage": ""  },
+    "homepage": ""
+  },
   "license": "MIT",
   "icon": "yesstevemodel.png",
   "environment": "*",
@@ -26,9 +29,14 @@
     "yes_steve_model_fabric.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.17.0",
-    "minecraft": "~1.21.8",
-    "java": ">=21"
+    "fabricloader": ">=0.20.1",
+    "minecraft": "${minecraft_version}",
+    "java": ">=25",
+    "fabric-api": "*",
+    "architectury": "*",
+    "forgeconfigapiport": "*",
+    "cardinal-components-base": ">=8.0.1",
+    "cardinal-components-entity": ">=8.0.1"
   },
   "suggests": {
     "another-mod": "*"

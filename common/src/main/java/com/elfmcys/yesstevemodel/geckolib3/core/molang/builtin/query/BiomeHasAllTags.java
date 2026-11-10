@@ -17,7 +17,7 @@ public class BiomeHasAllTags extends EntityFunction {
         Holder<Biome> biome = entity.level().getBiome(entity.blockPosition());
 
         for (int i = 0; i < arguments.size(); i++) {
-            Identifier id = arguments.getResourceLocation(context, i);
+            Identifier id = arguments.getIdentifier(context, i);
             if (id == null) {
                 return null;
             }

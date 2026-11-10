@@ -18,7 +18,7 @@ public class RelativeBlockNameAny extends EntityFunction {
             return null;
         }
         for (int i = 3; i < arguments.size(); i++) {
-            if (key.equals(arguments.getResourceLocation(context, i))) {
+            if (key.equals(arguments.getIdentifier(context, i))) {
                 return true;
             }
         }

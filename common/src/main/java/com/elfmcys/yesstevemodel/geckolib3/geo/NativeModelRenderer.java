@@ -10,7 +10,6 @@ import com.elfmcys.yesstevemodel.util.log.ChatLogger;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.resources.Identifier;
 import org.joml.*;
 import rip.ysm.compat.oculus.OculusCompat;
@@ -32,64 +31,12 @@ public class NativeModelRenderer {
     }
 
     public static void renderMesh(VertexConsumer buffer, PoseStack.Pose pose, GeoModel model, float[] boneParams, float[] stateBuffer, int textureIndex, int renderPartMask, int packedLight, int packedOverlay, float red, float green, float blue, float alpha, Identifier textureLocation) {
-        OculusCompat.updatePBRState();
-        boolean isCompatMode = OptiFineDetector.isOptifinePresent() || GeneralConfig.USE_COMPATIBILITY_RENDERER.get();
-        projectionModelViewMatrix.set(net.minecraft.client.Minecraft.getInstance().gameRenderer.getProjectionMatrix(net.minecraft.client.Minecraft.getInstance().options.fov().get())).mul(RenderSystem.getModelViewMatrix());
-        boolean isPreview = ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer();
-
-        if (textureLocation != null && NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && GeneralConfig.USE_GPU_RENDERER.get()) {
-
-            if(!GpuCapability.isAvailable())
-            {
-                ChatLogger.INSTANCE.logFormatted("Disabled GPU renderer for: " + GpuCapability.getReason());
-                GeneralConfig.USE_GPU_RENDERER.set(false);
-                return;
-            }
-
-            if (OculusCompat.isShaderPackInUse() && !isPreview) {
-                if (IrisRenderPath.tryRender(model, pose, boneParams, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
-                    return;
-                }
-            } else {
-                if (GpuRenderPath.tryRender(model, pose, boneParams, stateBuffer, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
-                    return;
-                }
-            }
-        }
-
-        if (NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && !isPreview) { // WIP: SIMD MODEL RENDER
-            nativeRenderModel(
-                    buffer,
-                    pose,
-                    projectionModelViewMatrix,
-                    OptiFineDetector.isOptifinePresent(),
-                    model,
-                    boneParams,
-                    stateBuffer,
-                    textureIndex,
-                    renderPartMask,
-                    packedLight,
-                    packedOverlay,
-                    red, green, blue, alpha,
-                    isPreview
-            );
-        } else {
-            renderModel(
-                    buffer,
-                    pose,
-                    projectionModelViewMatrix,
-                    OptiFineDetector.isOptifinePresent(),
-                    model,
-                    boneParams,
-                    stateBuffer,
-                    textureIndex,
-                    renderPartMask,
-                    packedLight,
-                    packedOverlay,
-                    red, green, blue, alpha,
-                    isPreview
-            );
-        }
+        // Minecraft 26.2 records render work before executing GPU commands. Build
+        // model vertices now so the deferred callback owns a stable snapshot.
+        // The old direct-OpenGL/JNI draw path cannot run safely in this phase.
+        renderModel(buffer, pose, projectionModelViewMatrix, false, model,
+                boneParams, stateBuffer, textureIndex, renderPartMask, packedLight,
+                packedOverlay, red, green, blue, alpha, ModelPreviewRenderer.isPreview());
     }
 
     public static void renderModel(
@@ -110,11 +57,9 @@ public class NativeModelRenderer {
         // TODO: 修復GC壓力
         Matrix4f rootPoseMat = pose.pose();
         Matrix3f rootNormalMC = pose.normal();
-        Matrix4f projMat = net.minecraft.client.Minecraft.getInstance().gameRenderer.getProjectionMatrix(net.minecraft.client.Minecraft.getInstance().options.fov().get());
 
         Matrix4f identityMat = new Matrix4f();
         Matrix4f globalBoneMat = new Matrix4f();
-        Matrix4f projBoneMat = new Matrix4f();
         Matrix3f localNormalMat = new Matrix3f();
         Matrix3f globalNormalMat = new Matrix3f();
 
@@ -142,13 +87,12 @@ public class NativeModelRenderer {
 
             Matrix4f localBoneMat = boneLocalTransforms[i];
             globalBoneMat.set(rootPoseMat).mul(localBoneMat);
-            projBoneMat.set(projMat).mul(globalBoneMat);
 
             // 法線全域矩陣
             localBoneMat.normal(localNormalMat);
             globalNormalMat.set(rootNormalMC).mul(localNormalMat);
 
-            int currentPackedLight = bone.glow ? LightTexture.pack(15, 15) : packedLight;
+            int currentPackedLight = bone.glow ? 15728880 : packedLight;
 
             for (GeoModel.BakedCube cube : bone.cubes) {
                 for (GeoModel.BakedQuad quad : cube.quads) {

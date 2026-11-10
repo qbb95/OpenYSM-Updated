@@ -32,7 +32,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -336,9 +336,9 @@ public class AnimationRouletteScreen extends Screen {
             }
         }) {
             @Override
-            public void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            public void extractContents(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
                 guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), -280804798);
-                super.renderContents(guiGraphics, mouseX, mouseY, partialTick);
+                super.extractContents(guiGraphics, mouseX, mouseY, partialTick);
             }
         };
         configCheckBox.setStateTriggered(parsedValue > 0.0f);
@@ -360,9 +360,10 @@ public class AnimationRouletteScreen extends Screen {
         return value;
     }
 
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         int scrolledMouseY;
-        guiGraphics.drawCenteredString(this.font, Component.translatable("gui.yes_steve_model.roulette.path", StringUtils.joinWith(" > ", navigationStack.stream().map((v0) -> {
+        guiGraphics.centeredText(this.font, Component.translatable("gui.yes_steve_model.roulette.path", StringUtils.joinWith(" > ", navigationStack.stream().map((v0) -> {
             return v0.getLeft();
         }).toArray())), this.centerX + 195, this.centerY - 100, -1);
         renderRadialBackground(guiGraphics, mouseX, mouseY);
@@ -370,7 +371,7 @@ public class AnimationRouletteScreen extends Screen {
         renderPageInfo(guiGraphics);
         for (Renderable renderable : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (!(renderable instanceof ISpecialWidget)) {
-                renderable.render(guiGraphics, mouseX, mouseY, partialTick);
+                renderable.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
             }
         }
         guiGraphics.enableScissor(0, this.centerY - 46, this.width, this.centerY + 110);
@@ -383,7 +384,7 @@ public class AnimationRouletteScreen extends Screen {
         guiGraphics.pose().translate(0.0f, -this.configScrollOffset);
         for (Renderable renderable2 : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (renderable2 instanceof ISpecialWidget) {
-                renderable2.render(guiGraphics, mouseX, scrolledMouseY, partialTick);
+                renderable2.extractRenderState(guiGraphics, mouseX, scrolledMouseY, partialTick);
             }
         }
         guiGraphics.pose().popMatrix();
@@ -391,7 +392,7 @@ public class AnimationRouletteScreen extends Screen {
         renderHoverTooltip(guiGraphics, mouseX, scrolledMouseY);
     }
 
-    private void renderHoverTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    private void renderHoverTooltip(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
         if (-1 < this.hoveredIndex && this.hoveredIndex < this.currentProperties.size()) {
             String str = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, "properties.extra_animation.%s.desc".formatted(this.currentProperties.getKeyAt(this.hoveredIndex)), StringPool.EMPTY);
             if (StringUtils.isNotBlank(str)) {
@@ -408,12 +409,12 @@ public class AnimationRouletteScreen extends Screen {
         }
     }
 
-    private void renderPageInfo(GuiGraphics guiGraphics) {
+    private void renderPageInfo(GuiGraphicsExtractor guiGraphics) {
         guiGraphics.fill(this.centerX + 157, this.centerY - 87, this.centerX + 238, this.centerY - 72, -822083584);
-        guiGraphics.drawCenteredString(this.font, String.format("%d/%d", Integer.valueOf(this.currentNavEntry.getRight().intValue() + 1), Integer.valueOf(((this.currentProperties.size() - 1) / 8) + 1)), this.centerX + 197, this.centerY - 83, ChatFormatting.AQUA.getColor().intValue() | 0xFF000000);
+        guiGraphics.centeredText(this.font, String.format("%d/%d", Integer.valueOf(this.currentNavEntry.getRight().intValue() + 1), Integer.valueOf(((this.currentProperties.size() - 1) / 8) + 1)), this.centerX + 197, this.centerY - 83, net.minecraft.ChatFormatting.AQUA.getColor() | 0xFF000000);
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double delta) {
         if (delta < 0.0d) {
             if (mouseX < this.centerX + 110) {
                 nextPage();
@@ -529,7 +530,7 @@ public class AnimationRouletteScreen extends Screen {
             });
         }
         if (localPlayer != null && GeneralConfig.PRINT_ANIMATION_ROULETTE_MSG.get().booleanValue()) {
-            localPlayer.displayClientMessage(Component.translatable("message.yes_steve_model.model.animation_roulette.play", str), false);
+            localPlayer.sendSystemMessage(Component.translatable("message.yes_steve_model.model.animation_roulette.play", str));
         }
         Minecraft.getInstance().setScreen(null);
     }
@@ -538,7 +539,7 @@ public class AnimationRouletteScreen extends Screen {
         if (navigationStack.size() > 5) {
             LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null) {
-                localPlayer.displayClientMessage(Component.translatable("gui.yes_steve_model.roulette.too_long"), false);
+                localPlayer.sendSystemMessage(Component.translatable("gui.yes_steve_model.roulette.too_long"));
                 return;
             }
             return;
@@ -569,7 +570,7 @@ public class AnimationRouletteScreen extends Screen {
         return false;
     }
 
-    private void renderRadialButtons(GuiGraphics guiGraphics) {
+    private void renderRadialButtons(GuiGraphicsExtractor guiGraphics) {
         float angle = 0.3926991f;
         int size = this.currentProperties.size() - (this.currentNavEntry.getRight().intValue() * 8);
         for (int i = 0; i < Math.min(8, size); i++) {
@@ -587,13 +588,13 @@ public class AnimationRouletteScreen extends Screen {
                     int iCos2 = (int) (this.centerX + (35 * Mth.cos(angle)));
                     float fSin2 = this.centerY + (35 * Mth.sin(angle));
                     Objects.requireNonNull(this.font);
-                    guiGraphics.drawCenteredString(this.font, Component.literal("⚙").withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD), iCos2, (int) (fSin2 - (9.0f / 2.0f)), -1);
+                    guiGraphics.centeredText(this.font, Component.literal("⚙").withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD), iCos2, (int) (fSin2 - (9.0f / 2.0f)), -1);
                 }
             }
             if (StringUtils.isNoneBlank(str)) {
                 renderWrappedLabel(guiGraphics, Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, "properties.extra_animation.%s".formatted(this.currentProperties.getKeyAt(iIntValue)), str)), iCos, labelY, zStartsWith);
             } else {
-                guiGraphics.drawCenteredString(this.font, Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, "properties.extra_animation.%s".formatted(this.currentProperties.getKeyAt(iIntValue)), String.valueOf(iIntValue))), iCos, labelY - 8, 0xFFF3F0E0);
+                guiGraphics.centeredText(this.font, Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, "properties.extra_animation.%s".formatted(this.currentProperties.getKeyAt(iIntValue)), String.valueOf(iIntValue))), iCos, labelY - 8, 0xFFF3F0E0);
             }
             if (this.currentNavEntry.getRight().intValue() == 0 && navigationStack.size() == 1) {
                 renderKeyBindings(guiGraphics, iIntValue, iCos, labelY);
@@ -602,7 +603,7 @@ public class AnimationRouletteScreen extends Screen {
         }
     }
 
-    private void renderKeyBindings(GuiGraphics guiGraphics, int slotIndex, int x, int y) {
+    private void renderKeyBindings(GuiGraphicsExtractor guiGraphics, int slotIndex, int x, int y) {
         MutableComponent mutableComponentWithStyle = Component.literal("[ ").withStyle(ChatFormatting.YELLOW);
         KeyMapping keyMapping = ExtraAnimationKey.KEY_MAPPINGS.get(slotIndex);
         if (keyMapping.isUnbound()) {
@@ -611,10 +612,10 @@ public class AnimationRouletteScreen extends Screen {
             mutableComponentWithStyle.append(keyMapping.getTranslatedKeyMessage());
         }
         mutableComponentWithStyle.append(" ]");
-        guiGraphics.drawCenteredString(this.font, mutableComponentWithStyle, x, y + 4, 0xFFF3F0E0);
+        guiGraphics.centeredText(this.font, mutableComponentWithStyle, x, y + 4, 0xFFF3F0E0);
     }
 
-    private void renderWrappedLabel(GuiGraphics guiGraphics, MutableComponent mutableComponent, int x, int y, boolean isSubmenu) {
+    private void renderWrappedLabel(GuiGraphicsExtractor guiGraphics, MutableComponent mutableComponent, int x, int y, boolean isSubmenu) {
         Objects.requireNonNull(this.font);
         if (isSubmenu) {
             mutableComponent = mutableComponent.withStyle(ChatFormatting.RED);
@@ -626,12 +627,12 @@ public class AnimationRouletteScreen extends Screen {
         }
         Iterator it = listSplit.iterator();
         while (it.hasNext()) {
-            guiGraphics.drawCenteredString(this.font, (FormattedCharSequence) it.next(), x, lineY, 0xFFF3F0E0);
+            guiGraphics.centeredText(this.font, (FormattedCharSequence) it.next(), x, lineY, 0xFFF3F0E0);
             lineY += 9;
         }
     }
 
-    private void renderRadialBackground(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    private void renderRadialBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
         if (this.currentProperties.isEmpty()) {
             return;
         }
@@ -668,7 +669,7 @@ public class AnimationRouletteScreen extends Screen {
         }
     }
 
-    private boolean checkRadialHover(GuiGraphics guiGraphics, float startAngle, float pointerAngle, float endAngle, float pointerRadius, boolean alreadyHovered, boolean isSubmenu, int index) {
+    private boolean checkRadialHover(GuiGraphicsExtractor guiGraphics, float startAngle, float pointerAngle, float endAngle, float pointerRadius, boolean alreadyHovered, boolean isSubmenu, int index) {
         boolean isHovered = startAngle < pointerAngle && pointerAngle < endAngle && 50.0f < pointerRadius && pointerRadius < 100.0f;
         if (isHovered) {
             alreadyHovered = true;
@@ -687,7 +688,7 @@ public class AnimationRouletteScreen extends Screen {
         return alreadyHovered;
     }
 
-    private void drawRadialSegment(GuiGraphics guiGraphics, float innerRadius, float outerRadius, float startAngle, float endAngle, int color) {
+    private void drawRadialSegment(GuiGraphicsExtractor guiGraphics, float innerRadius, float outerRadius, float startAngle, float endAngle, int color) {
         float startCos = Mth.cos(startAngle);
         float startSin = Mth.sin(startAngle);
         float endCos = Mth.cos(endAngle);
@@ -700,7 +701,7 @@ public class AnimationRouletteScreen extends Screen {
         float innerEndY = this.centerY + innerRadius * endSin;
         float outerEndX = this.centerX + outerRadius * endCos;
         float outerEndY = this.centerY + outerRadius * endSin;
-        guiGraphics.guiRenderState.submitGuiElement(RadialSliceRenderState.of(
+        ((com.elfmcys.yesstevemodel.mixin.client.GuiGraphicsExtractorAccessor) guiGraphics).ysm$getGuiRenderState().addGuiElement(RadialSliceRenderState.of(
                 guiGraphics.pose(),
                 outerStartX, outerStartY,
                 innerStartX, innerStartY,

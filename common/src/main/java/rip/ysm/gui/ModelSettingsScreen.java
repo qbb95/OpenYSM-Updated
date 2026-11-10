@@ -9,25 +9,15 @@ import com.elfmcys.yesstevemodel.client.gui.custom.configs.RadioConfig;
 import com.elfmcys.yesstevemodel.client.gui.custom.configs.RangeConfig;
 import com.elfmcys.yesstevemodel.client.model.ModelAssembly;
 import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
-import com.elfmcys.yesstevemodel.client.renderer.RendererManager;
 import com.elfmcys.yesstevemodel.geckolib3.core.AnimatableEntity;
-import com.elfmcys.yesstevemodel.geckolib3.geo.GeoReplacedEntityRenderer;
 import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4fStack;
-import org.joml.Quaternionf;
 import rip.ysm.gui.components.BooleanOptionRow;
 import rip.ysm.gui.components.RadioOptionRow;
 import rip.ysm.gui.components.SliderOptionRow;
@@ -180,82 +170,22 @@ public class ModelSettingsScreen extends OptionScreen {
     }
 
     @Override
-    protected void renderExtras(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderExtras(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         g.fill(previewLeft, previewTop, previewRight, previewBottom, 0x66000000);
         renderPreview(g, partialTick);
     }
 
-    private void renderPreview(GuiGraphics g, float partialTick) {
-        if (this.minecraft == null || this.minecraft.player == null) return;
-        if (!(animatable instanceof LivingAnimatable<?> la)) return;
-        double scale = this.minecraft.getWindow().getGuiScale();
-        int sx = (int) (previewLeft * scale);
-        int sy = (int) (this.minecraft.getWindow().getHeight() - previewBottom * scale);
-        int sw = (int) ((previewRight - previewLeft) * scale);
-        int sh = (int) ((previewBottom - previewTop) * scale);
-        RenderSystem.enableScissorForRenderTypeDraws(sx, sy, sw, sh);
-        float cx = (previewLeft + previewRight) / 2.0f + offsetX;
-        float cy = previewTop + (previewBottom - previewTop) * 0.65f + offsetY;
-        renderPlayerForSettings(cx, cy, zoom, pitch, yaw, partialTick, la, RendererManager.getPlayerRenderer());
-        RenderSystem.disableScissorForRenderTypeDraws();
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static void renderPlayerForSettings(float x, float y, float scale, float pitch, float yaw, float partialTick, LivingAnimatable animatable, GeoReplacedEntityRenderer renderer) {
-        ModelPreviewRenderer.setPreviewMode(true);
-        LivingEntity livingEntity = (LivingEntity) animatable.getEntity();
-        Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
-        modelViewStack.pushMatrix();
-        modelViewStack.translate(x, y, 1250.0f);
-        modelViewStack.scale(1.0f, 1.0f, -1.0f);
-
-        PoseStack poseStack = new PoseStack();
-        poseStack.translate(0.0d, 0.0d, 1000.0d);
-        poseStack.scale(scale, scale, scale);
-        poseStack.translate(0.0d, 0.8d, 0.0d);
-
-        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
-        Quaternionf rotationX = Axis.XP.rotationDegrees(-10.0f + pitch);
-        rotationZ.mul(rotationX);
-        poseStack.mulPose(rotationZ);
-
-        float oldBodyRot = livingEntity.yBodyRot;
-        float oldBodyRotO = livingEntity.yBodyRotO;
-        float oldYRot = livingEntity.getYRot();
-        float oldYRotO = livingEntity.yRotO;
-        float oldXRot = livingEntity.getXRot();
-        float oldXRotO = livingEntity.xRotO;
-        float oldHeadRot = livingEntity.yHeadRot;
-        float oldHeadRotO = livingEntity.yHeadRotO;
-
-        livingEntity.yBodyRot = -yaw;
-        livingEntity.yBodyRotO = -yaw;
-        livingEntity.setYRot(180.0f);
-        livingEntity.yRotO = 180.0f;
-        livingEntity.setXRot(0.0f);
-        livingEntity.xRotO = 0.0f;
-        livingEntity.yHeadRot = -yaw;
-        livingEntity.yHeadRotO = -yaw;
-
-        rotationX.conjugate();
-        poseStack.mulPose(rotationX);
-        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-        AvatarRenderState state = new AvatarRenderState();
-
+    private void renderPreview(GuiGraphicsExtractor graphics, float partialTick) {
+        if (this.minecraft.player == null || !(animatable instanceof LivingAnimatable<?> living)) return;
+        float anchorX = (previewLeft + previewRight) / 2.0f + offsetX;
+        float anchorY = previewTop + (previewBottom - previewTop) * 0.65f + offsetY;
+        graphics.enableScissor(previewLeft, previewTop, previewRight, previewBottom);
         try {
-            renderer.renderEntity(animatable, state, 0.0f, partialTick, poseStack, bufferSource, 15728880);
-            bufferSource.endBatch();
+            ModelPreviewRenderer.submitSettingsPreview(graphics, living,
+                    previewLeft, previewTop, previewRight, previewBottom,
+                    anchorX, anchorY, zoom, pitch, yaw, partialTick);
         } finally {
-            livingEntity.yBodyRot = oldBodyRot;
-            livingEntity.yBodyRotO = oldBodyRotO;
-            livingEntity.setYRot(oldYRot);
-            livingEntity.yRotO = oldYRotO;
-            livingEntity.setXRot(oldXRot);
-            livingEntity.xRotO = oldXRotO;
-            livingEntity.yHeadRot = oldHeadRot;
-            livingEntity.yHeadRotO = oldHeadRotO;
-            modelViewStack.popMatrix();
-            ModelPreviewRenderer.setPreviewMode(false);
+            graphics.disableScissor();
         }
     }
 

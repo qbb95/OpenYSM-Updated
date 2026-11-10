@@ -11,9 +11,17 @@
 
 ___
 
+## Experimental Fabric 26.1.x builds
+
+Use the JAR matching **26.1**, **26.1.1** or **26.1.2** on the server and every
+client. Dependencies are bundled. These unofficial alpha builds use the Java
+model backend and need no special launcher workaround. Models are unchanged.
+
+[Build/test details](PORT-26.1.md) · [Unofficial test Releases](https://github.com/IsSlashy/OpenYSM-Updated/releases)
+
 ## 注意
 ### 该项目仅作为高版本移植可行性验证，_**对可用性没有任何保证，使用过程中可能会出现大量bug**_，如果发现问题请提交 issue。
-### 目前仅确保了可以进入单人世界并且正常渲染模型，多人游戏及服务器相关功能暂未测试，如果发现问题请提交 issue。
+### 本分支已在 26.1、26.1.1、26.1.2 的 Windows 本地独立服务器和两个客户端上测试模型同步及常用远端动画。仍为非官方 alpha，详细测试范围和限制见 [PORT-26.1.md](PORT-26.1.md)。
 
 ## 版本支持
 
@@ -26,7 +34,11 @@ ___
 | 1.21.9  | ✅ (见 commit history)                        |
 | 1.21.10 | ✅ (见 commit history)                        |
 | 1.21.11 | ✅                                           |
-| 26.1.x  | ❌ Architectury 没更新                          |
+| 26.1 | ✅ Fabric 非官方 alpha.1；独立服务器 + 双客户端测试 |
+| 26.1.1 | ✅ Fabric 非官方 alpha.1；独立服务器 + 双客户端测试 |
+| 26.1.2 | ✅ Fabric 非官方 alpha.1；独立服务器 + 双客户端测试 |
+
+本分支仅构建 26.1、26.1.1、26.1.2；更早版本请查阅上游提交历史。
 
 ## 已知问题
-ModelPreviewRenderer 中的动画暂未适配, 会出现问题 (sleep, ride 等动画)
+并非所有模型动画、第三方模组集成或平台都已重新验证；详见 [PORT-26.1.md](PORT-26.1.md)。

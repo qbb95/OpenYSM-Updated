@@ -10,10 +10,10 @@ import com.elfmcys.yesstevemodel.util.CameraUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
-import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.entity.player.Player;
 import rip.ysm.compat.firstperson.FirstPersonCompat;
 import rip.ysm.compat.oculus.OculusCompat;
@@ -45,11 +45,11 @@ public class ReplacePlayerRenderEvent {
                         || GeneralConfig.DISABLE_EXTERNAL_FP_ANIM.get().booleanValue()
                         || !PlayerAnimatorCompat.isPlayerAnimated(localPlayer)) {
                     cancelled[0] = true;
-                    MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
                     RenderContext.enter(collector, cameraState);
+                    DeferredBufferSource bufferSource = RenderContext.bufferSource();
                     try {
                         int packedLight = ModelPreviewRenderer.isPreview()
-                                ? net.minecraft.client.renderer.LightTexture.FULL_BRIGHT
+                                ? net.minecraft.util.LightCoordsUtil.FULL_BRIGHT
                                 : renderState.lightCoords;
                         RendererManager.getPlayerRenderer().render(entity, renderState, entity.getYRot(), ModelPreviewRenderer.isPreview() ? 1.0f : partialTick, poseStack, bufferSource, packedLight);
                         if (OculusCompat.isRenderingShadowPass()) {

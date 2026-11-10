@@ -1,0 +1,5 @@
+{
+  "26.1": {"fabric_api_version": "0.145.1+26.1", "architectury_api_version": "20.0.4", "iris_version": "Yi5E3d2l"},
+  "26.1.1": {"fabric_api_version": "0.145.4+26.1.1", "architectury_api_version": "20.0.4", "iris_version": "MwcLS51S"},
+  "26.1.2": {"fabric_api_version": "0.155.3+26.1.2", "architectury_api_version": "20.1.17", "iris_version": "sZbVsl2Q"}
+}

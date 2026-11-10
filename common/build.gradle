@@ -8,22 +8,22 @@ dependencies {
     // We depend on Fabric Loader here to use the Fabric @Environment annotations,
     // which get remapped to the correct annotations on each platform.
     // Do NOT use other classes from Fabric Loader.
-    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
+    implementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    implementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
 
     // Architectury API common artifact — 提供 Event<>、ClientLifecycleEvent、PlayerEvent 等抽象事件类型。
-    modCompileOnly "dev.architectury:architectury:$rootProject.architectury_api_version"
+    compileOnly "dev.architectury:architectury:$rootProject.architectury_api_version"
 
     // Forge Config API Port — 让 common 在编译期看到 net.minecraftforge.common.ForgeConfigSpec 等类。
-    // 运行时由 fabric 子项目通过 modImplementation 引入 port。
-    modCompileOnly "maven.modrinth:forge-config-api-port:$rootProject.forge_config_api_port_version"
+    // 运行时由 fabric 子项目通过 implementation 引入 port。
+    compileOnly "maven.modrinth:forge-config-api-port:$rootProject.forge_config_api_port_version"
 
     // Cardinal Components — common 需要在编译期看到 ComponentKey/EntityComponentInitializer 等接口。
-    modCompileOnly "org.ladysnake.cardinal-components-api:cardinal-components-base:$rootProject.cardinal_components_version"
-    modCompileOnly "org.ladysnake.cardinal-components-api:cardinal-components-entity:$rootProject.cardinal_components_version"
+    compileOnly "org.ladysnake.cardinal-components-api:cardinal-components-base:$rootProject.cardinal_components_version"
+    compileOnly "org.ladysnake.cardinal-components-api:cardinal-components-entity:$rootProject.cardinal_components_version"
 
     // ImageStream — 用于 avif/webp/jpeg 解码。运行时由 fabric 子项目通过 jar-in-jar 内嵌。
-    compileOnly "com.github.TartaricAlkaline:ImageStream:-SNAPSHOT"
+    compileOnly "com.github.TartaricAlkaline:ImageStream:b543665ea5"
 }
 
 tasks.register('compileNative') {
