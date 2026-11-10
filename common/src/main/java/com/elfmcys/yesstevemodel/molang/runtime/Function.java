@@ -69,16 +69,16 @@ public interface Function {
         }
 
         @Nullable
-        public Identifier getResourceLocation(@NotNull ExecutionContext<? extends IContext<?>> ctx, final int index) {
+        public Identifier getIdentifier(@NotNull ExecutionContext<? extends IContext<?>> ctx, final int index) {
             Object obj;
             Object obj2 = getValue(ctx, index);
             if (obj2 instanceof StringExpression stringExpression) {
-                if (stringExpression.getResourceLocation() != null) {
-                    return stringExpression.getResourceLocation();
+                if (stringExpression.getIdentifier() != null) {
+                    return stringExpression.getIdentifier();
                 }
                 Identifier resourceLocationTryParse = Identifier.tryParse(stringExpression.getName());
                 if (resourceLocationTryParse != null) {
-                    stringExpression.setResourceLocation(resourceLocationTryParse);
+                    stringExpression.setIdentifier(resourceLocationTryParse);
                     return resourceLocationTryParse;
                 }
                 obj = stringExpression.getName();

@@ -2,10 +2,8 @@ package rip.ysm.gpu;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.util.log.ChatLogger;
-import com.mojang.blaze3d.opengl.GlDevice;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTextureView;
-import com.mojang.blaze3d.opengl.DirectStateAccess;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
@@ -170,7 +168,7 @@ public final class BlurShader {
     public static void captureScreen(long frameKey) {
         if (frameKey == lastCaptureFrame && frameKey >= 0) return;
         lastCaptureFrame = frameKey;
-        RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
+        RenderTarget main = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         int w = main.width;
         int h = main.height;
         ensureCaptureTexture(w, h);
@@ -180,8 +178,7 @@ public final class BlurShader {
         if (!(colorView instanceof GlTextureView glColor) || !(depthView instanceof GlTextureView glDepth)) {
             return;
         }
-        DirectStateAccess dsa = ((GlDevice) RenderSystem.getDevice()).directStateAccess();
-        int mainFbo = glColor.getFbo(dsa, glDepth.texture());
+        int mainFbo = LegacyFramebuffers.framebuffer(glColor, glDepth);
 
         GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, mainFbo);
         GlStateManager._activeTexture(GL13.GL_TEXTURE0);

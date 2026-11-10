@@ -96,6 +96,7 @@ public class YSMByteBuf implements AutoCloseable {
 
     public byte[] readByteArray() {
         int len = readVarInt();
+        if (len < 0 || len > buf.readableBytes()) throw new IllegalArgumentException("Invalid byte array length: " + len);
         if (len == 0) return new byte[0];
         byte[] bytes = new byte[len];
         buf.readBytes(bytes);
@@ -104,6 +105,7 @@ public class YSMByteBuf implements AutoCloseable {
 
     public String readString() {
         int len = readVarInt();
+        if (len < 0 || len > buf.readableBytes()) throw new IllegalArgumentException("Invalid string length: " + len);
         if (len == 0) return "";
         byte[] bytes = new byte[len];
         buf.readBytes(bytes);

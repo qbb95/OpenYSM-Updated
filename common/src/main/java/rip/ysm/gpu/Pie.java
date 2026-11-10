@@ -1,66 +1,80 @@
 package rip.ysm.gpu;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
+import com.elfmcys.yesstevemodel.mixin.client.GuiGraphicsExtractorAccessor;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
+import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fc;
+import org.joml.Vector2f;
 
+/** Backend-independent, deferred annular-sector drawing for model menus. */
 public final class Pie {
     public static final float tau = (float) (Math.PI * 2.0);
-    private static final Matrix4f mvpScratch = new Matrix4f();
-    private static final float[] mvpFloats = new float[16];
 
-    public static void draw(GuiGraphics graphics, float centerX, float centerY, float innerRadius, float outerRadius, float startAngle, float endAngle, int rgba) {
-        draw(graphics, centerX, centerY, innerRadius, outerRadius, startAngle, endAngle, rgba, 1.0f);
+    public static void draw(GuiGraphicsExtractor graphics, float x, float y, float inner, float outer,
+                            float start, float end, int color) {
+        draw(graphics, x, y, inner, outer, start, end, color, 1.0f);
     }
 
-    public static void draw(GuiGraphics graphics, float centerX, float centerY, float innerRadius, float outerRadius, float startAngle, float endAngle, int rgba, float feather) {
-        if (!PieShader.ensureCompiled()) return;
+    public static void draw(GuiGraphicsExtractor graphics, float x, float y, float inner, float outer,
+                            float start, float end, int color, float feather) {
+        if (!(outer > inner) || !Float.isFinite(start) || !Float.isFinite(end)) return;
+        float sweep = end - start;
+        while (sweep < 0) sweep += tau;
+        if (sweep == 0 && start != end) sweep = tau;
+        if (sweep == 0) return;
+        sweep = Math.min(tau, sweep);
+        float edge = Math.max(0, Math.min(feather, (outer - inner) * 0.5f));
+        Matrix3x2f pose = new Matrix3x2f(graphics.pose());
+        ((GuiGraphicsExtractorAccessor) graphics).ysm$getGuiRenderState().addGuiElement(
+                new Sector(pose, x, y, Math.max(0, inner), outer, start, sweep, color, edge,
+                        bounds(pose, x, y, outer + edge)));
+    }
 
-        float pad = feather + 1.0f;
-        float rectX = centerX - outerRadius - pad;
-        float rectY = centerY - outerRadius - pad;
-        float rectW = (outerRadius + pad) * 2.0f;
-        float rectH = (outerRadius + pad) * 2.0f;
+    private static ScreenRectangle bounds(Matrix3x2fc pose, float x, float y, float radius) {
+        float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY;
+        float maxX = Float.NEGATIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY;
+        for (int i = 0; i < 4; i++) {
+            Vector2f p = pose.transformPosition(x + ((i & 1) == 0 ? -radius : radius),
+                    y + ((i & 2) == 0 ? -radius : radius), new Vector2f());
+            minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+        }
+        return new ScreenRectangle((int) Math.floor(minX), (int) Math.floor(minY),
+                (int) Math.ceil(maxX) - (int) Math.floor(minX), (int) Math.ceil(maxY) - (int) Math.floor(minY));
+    }
 
-        int sw = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        int sh = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        mvpScratch.identity().ortho(0.0f, sw, sh, 0.0f, 1000.0f, 21000.0f);
-        mvpScratch.mul(RenderSystem.getModelViewMatrix());
-        mvpScratch.mul(graphics.pose());
-        mvpScratch.get(mvpFloats);
-
-        float cr = ((rgba >> 16) & 0xFF) / 255.0f;
-        float cg = ((rgba >> 8) & 0xFF) / 255.0f;
-        float cb = (rgba & 0xFF) / 255.0f;
-        float ca = ((rgba >> 24) & 0xFF) / 255.0f;
-
-        GlStateManager._enableBlend();
-        GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GlStateManager._disableCull();
-        GlStateManager._disableDepthTest();
-
-        GlStateManager._glUseProgram(PieShader.program());
-
-        if (PieShader.locProj() >= 0) GL20.glUniformMatrix4fv(PieShader.locProj(), false, mvpFloats);
-        if (PieShader.locRect() >= 0) GL20.glUniform4f(PieShader.locRect(), rectX, rectY, rectW, rectH);
-        if (PieShader.locCenter() >= 0) GL20.glUniform2f(PieShader.locCenter(), centerX, centerY);
-        if (PieShader.locOuterRadius() >= 0) GL20.glUniform1f(PieShader.locOuterRadius(), outerRadius);
-        if (PieShader.locInnerRadius() >= 0) GL20.glUniform1f(PieShader.locInnerRadius(), Math.max(0.0f, innerRadius));
-        if (PieShader.locStartAngle() >= 0) GL20.glUniform1f(PieShader.locStartAngle(), startAngle);
-        if (PieShader.locEndAngle() >= 0) GL20.glUniform1f(PieShader.locEndAngle(), endAngle);
-        if (PieShader.locColor() >= 0) GL20.glUniform4f(PieShader.locColor(), cr, cg, cb, ca);
-        if (PieShader.locFeather() >= 0) GL20.glUniform1f(PieShader.locFeather(), feather);
-
-        GlStateManager._glBindVertexArray(PieShader.dummyVao());
-        GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
-
-        GlStateManager._glUseProgram(0);
-        GlStateManager._glBindVertexArray(0);
-
-        GlStateManager._disableBlend();
+    private record Sector(Matrix3x2fc pose, float x, float y, float inner, float outer,
+                          float start, float sweep, int color, float feather,
+                          ScreenRectangle bounds) implements GuiElementRenderState {
+        @Override public RenderPipeline pipeline() { return RenderPipelines.GUI; }
+        @Override public TextureSetup textureSetup() { return TextureSetup.noTexture(); }
+        @Override public ScreenRectangle scissorArea() { return null; }
+        @Override public void buildVertices(VertexConsumer out) {
+            int steps = Math.max(1, (int) Math.ceil(sweep * Math.max(outer, 16) / 3.0f));
+            for (int i = 0; i < steps; i++) {
+                float a = start + sweep * i / steps;
+                float b = start + sweep * (i + 1) / steps;
+                quad(out, a, b, inner, outer, color, color);
+                if (feather > 0) {
+                    quad(out, a, b, outer, outer + feather, color, color & 0x00FFFFFF);
+                    if (inner > 0) quad(out, a, b, Math.max(0, inner - feather), inner,
+                            color & 0x00FFFFFF, color);
+                }
+            }
+        }
+        private void quad(VertexConsumer out, float a, float b, float r0, float r1, int c0, int c1) {
+            vertex(out, a, r1, c1); vertex(out, a, r0, c0);
+            vertex(out, b, r0, c0); vertex(out, b, r1, c1);
+        }
+        private void vertex(VertexConsumer out, float angle, float radius, int argb) {
+            out.addVertexWith2DPose(pose, x + (float) Math.cos(angle) * radius,
+                    y + (float) Math.sin(angle) * radius).setColor(argb);
+        }
     }
 }

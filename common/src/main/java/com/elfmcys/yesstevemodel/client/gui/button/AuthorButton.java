@@ -8,7 +8,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -56,11 +56,12 @@ public class AuthorButton extends Button {
         return new AuthorButton(x, y, null, null, null, -1, screen);
     }
 
-    public void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    @Override
+    public void extractContents(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         Font font = Minecraft.getInstance().font;
         if (this.authorInfo == null || this.modelAssembly == null || this.Identifier == null) {
             guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -1891417534, -1891417534);
-            guiGraphics.drawCenteredString(font, Component.literal("......"), getX() + (this.width / 2), getY() + (this.height / 2), ChatFormatting.GRAY.getColor().intValue() | 0xFF000000);
+            guiGraphics.centeredText(font, Component.literal("......"), getX() + (this.width / 2), getY() + (this.height / 2), net.minecraft.network.chat.TextColor.GRAY.getValue() | 0xFF000000);
             return;
         }
         if (isHoveredOrFocused()) {
@@ -72,15 +73,15 @@ public class AuthorButton extends Button {
         String str = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, "metadata.authors.%d.name".formatted(this.authorIndex), this.authorInfo.getName());
         String str2 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, "metadata.authors.%d.role".formatted(this.authorIndex), this.authorInfo.getRole());
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, "metadata.authors.%d.comment".formatted(this.authorIndex), this.authorInfo.getComment());
-        guiGraphics.drawString(font, str, getX() + 2, getY() + 72, ChatFormatting.GOLD.getColor().intValue() | 0xFF000000, false);
-        guiGraphics.drawCenteredString(font, str2, getX() + 35, getY() + 82, ChatFormatting.GREEN.getColor().intValue() | 0xFF000000);
+        guiGraphics.text(font, str, getX() + 2, getY() + 72, net.minecraft.network.chat.TextColor.GOLD.getValue() | 0xFF000000, false);
+        guiGraphics.centeredText(font, str2, getX() + 35, getY() + 82, net.minecraft.network.chat.TextColor.GREEN.getValue() | 0xFF000000);
         drawWrappedText(guiGraphics, Component.literal(str3), getX() + 3, getY() + 95, 64, -1);
     }
 
-    public void drawWrappedText(GuiGraphics guiGraphics, FormattedText formattedText, int x, int y, int wrapWidth, int color) {
+    public void drawWrappedText(GuiGraphicsExtractor guiGraphics, FormattedText formattedText, int x, int y, int wrapWidth, int color) {
         Font font = Minecraft.getInstance().font;
         for (FormattedCharSequence formattedCharSequence : font.split(formattedText, wrapWidth)) {
-            guiGraphics.drawString(font, formattedCharSequence, x, y, color, false);
+            guiGraphics.text(font, formattedCharSequence, x, y, color, false);
             y += 9;
             if (y > getY() + this.height) {
                 return;
@@ -88,7 +89,7 @@ public class AuthorButton extends Button {
         }
     }
 
-    public void refreshContactComponents(GuiGraphics guiGraphics, Screen screen, int mouseX, int mouseY) {
+    public void refreshContactComponents(GuiGraphicsExtractor guiGraphics, Screen screen, int mouseX, int mouseY) {
         if (this.isHovered && !this.componentList.isEmpty()) {
             guiGraphics.setComponentTooltipForNextFrame(Minecraft.getInstance().font, this.componentList, mouseX, mouseY);
         } else if (this.selectedContactIndex != -1) {
@@ -148,11 +149,11 @@ public class AuthorButton extends Button {
             return;
         }
         if (link.startsWith("http://") || link.startsWith("https://")) {
-            Minecraft.getInstance().setScreen(new ConfirmLinkScreen(confirmed -> {
+            Minecraft.getInstance().gui.setScreen(new ConfirmLinkScreen(confirmed -> {
                 if (confirmed) {
                     Util.getPlatform().openUri(link);
                 }
-                Minecraft.getInstance().setScreen(this.parentScreen);
+                Minecraft.getInstance().gui.setScreen(this.parentScreen);
             }, link, true));
             return;
         }

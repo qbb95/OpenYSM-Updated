@@ -23,7 +23,7 @@ public class HasAnyCuriosWithAnyTag extends LivingEntityFunction {
         ReferenceArrayList<TagKey<Item>> referenceArrayList = ThreadLocalItemTagSets.TAG_KEY_LIST.get();
         referenceArrayList.size(arguments.size() - 1);
         for (int i = 1; i < arguments.size(); i++) {
-            Identifier tag = arguments.getResourceLocation(context, i);
+            Identifier tag = arguments.getIdentifier(context, i);
             if (tag == null) {
                 return null;
             }

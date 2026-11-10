@@ -23,6 +23,8 @@ public class RendererManager {
 
     private static VehicleRenderer vehicleRenderer;
 
+    private static net.minecraft.client.renderer.block.BlockModelResolver blockModelResolver;
+
     private RendererManager() {
     }
 
@@ -39,6 +41,7 @@ public class RendererManager {
         projectileRenderer = null;
         handRenderer = null;
         vehicleRenderer = null;
+        blockModelResolver = null;
     }
 
     private static void initRenderers(ResourceManager resourceManager) {
@@ -48,9 +51,9 @@ public class RendererManager {
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(
                 entityRenderDispatcher,
+                getBlockModelResolver(),
                 Minecraft.getInstance().getItemModelResolver(),
                 Minecraft.getInstance().getMapRenderer(),
-                Minecraft.getInstance().getBlockRenderer(),
                 resourceManager,
                 Minecraft.getInstance().getEntityModels(),
                 ((EntityRenderDispatcherAccessor) Minecraft.getInstance().getEntityRenderDispatcher()).getEquipmentAssetManager(),
@@ -63,6 +66,13 @@ public class RendererManager {
         handRenderer = new HandItemRenderer();
         vehicleRenderer = new VehicleRenderer(context);
         SBackpackCompat.setupRenderLayers();
+    }
+
+    public static net.minecraft.client.renderer.block.BlockModelResolver getBlockModelResolver() {
+        if (blockModelResolver == null) {
+            blockModelResolver = new net.minecraft.client.renderer.block.BlockModelResolver(Minecraft.getInstance().getModelManager());
+        }
+        return blockModelResolver;
     }
 
     public static CustomPlayerRenderer getPlayerRenderer() {

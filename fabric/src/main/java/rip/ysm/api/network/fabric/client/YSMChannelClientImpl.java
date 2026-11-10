@@ -21,6 +21,6 @@ public final class YSMChannelClientImpl {
     }
 
     public static Packet<?> toServerboundPacket(YSMPayload payload) {
-        return ClientPlayNetworking.createC2SPacket(payload);
+        return ClientPlayNetworking.createServerboundPacket(payload);
     }
 }

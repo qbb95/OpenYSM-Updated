@@ -26,7 +26,7 @@ public class ModScreenEvent {
     }
 
     public static void openScreen(PlayerModelScreen modelScreen) {
-        Minecraft.getInstance().setScreen(Objects.requireNonNullElseGet(receivedScreen, () -> {
+        Minecraft.getInstance().gui.setScreen(Objects.requireNonNullElseGet(receivedScreen, () -> {
             return new DownloadScreen(modelScreen);
         }));
     }

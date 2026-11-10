@@ -3,9 +3,7 @@ package rip.ysm.gpu;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.elfmcys.yesstevemodel.mixin.client.GlBufferAccessor;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.opengl.DirectStateAccess;
 import com.mojang.blaze3d.opengl.GlBuffer;
-import com.mojang.blaze3d.opengl.GlDevice;
 import com.mojang.blaze3d.opengl.GlSampler;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;
@@ -66,7 +64,7 @@ public final class GpuRenderPath {
 
         rootPose.get(rootPoseScratch);
         rootNormal.get(rootNormalScratch);
-        RenderSystem.getModelViewMatrix().get(modelViewScratch);
+        RenderSystem.getModelViewMatrixCopy().get(modelViewScratch);
 
         ByteBuffer boneBuf = mesh.perFrameBoneBuffer;
         boneBuf.clear();
@@ -90,7 +88,7 @@ public final class GpuRenderPath {
             targetWidth = targetColorView.getWidth(0);
             targetHeight = targetColorView.getHeight(0);
         } else {
-            RenderTarget mainTarget = mc.getMainRenderTarget();
+            RenderTarget mainTarget = mc.gameRenderer.mainRenderTarget();
             targetColorView = mainTarget.getColorTextureView();
             targetDepthView = mainTarget.getDepthTextureView();
             targetWidth = mainTarget.width;
@@ -98,8 +96,7 @@ public final class GpuRenderPath {
         }
         if (!(targetColorView instanceof GlTextureView glTargetColorView)) return false;
         if (!(targetDepthView instanceof GlTextureView glTargetDepthView)) return false;
-        DirectStateAccess dsa = ((GlDevice) RenderSystem.getDevice()).directStateAccess();
-        int targetFbo = glTargetColorView.getFbo(dsa, glTargetDepthView.texture());
+        int targetFbo = LegacyFramebuffers.framebuffer(glTargetColorView, glTargetDepthView);
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, targetFbo);
         GlStateManager._viewport(0, 0, targetWidth, targetHeight);
 
@@ -107,14 +104,14 @@ public final class GpuRenderPath {
         GlStateManager._enableDepthTest();
         GlStateManager._depthFunc(GL11.GL_LEQUAL);
         GlStateManager._depthMask(true);
-        GlStateManager._disableBlend();
+        GlStateManager._disableBlend(0);
 
         AbstractTexture modelTex = mc.getTextureManager().getTexture(textureLocation);
         GpuTexture modelGpuTex = modelTex.getTexture();
         if (!(modelGpuTex instanceof GlTexture glModelTex)) return false;
         int modelTexId = glModelTex.glId();
 
-        GpuTextureView lightView = mc.gameRenderer.lightTexture().getTextureView();
+        GpuTextureView lightView = mc.gameRenderer.lightmap();
         if (!(lightView instanceof GlTextureView glLightView)) return false;
         int lightTexId = glLightView.texture().glId();
 
@@ -170,11 +167,11 @@ public final class GpuRenderPath {
             if (BoneSkinShader.locAlphaMode() >= 0) GL20.glUniform1i(BoneSkinShader.locAlphaMode(), 1);
             GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
 
-            GlStateManager._enableBlend();
+            GlStateManager._enableBlend(0);
             GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
             if (BoneSkinShader.locAlphaMode() >= 0) GL20.glUniform1i(BoneSkinShader.locAlphaMode(), 2);
             GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
-            GlStateManager._disableBlend();
+            GlStateManager._disableBlend(0);
         }
 
         GL43.glBindBufferBase(GL43.GL_SHADER_STORAGE_BUFFER, BoneSkinShader.ssbo, 0);

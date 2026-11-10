@@ -16,7 +16,7 @@ import dev.architectury.event.EventResult;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -33,7 +33,7 @@ public class RenderFirstPlayerBackground {
         currentFrameRendered = false;
     }
 
-    public static void onRenderHand(PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight, float partialTick) {
+    public static void onRenderHand(PoseStack poseStack, DeferredBufferSource multiBufferSource, int packedLight, float partialTick) {
         if (!YesSteveModel.isAvailable()) {
             return;
         }

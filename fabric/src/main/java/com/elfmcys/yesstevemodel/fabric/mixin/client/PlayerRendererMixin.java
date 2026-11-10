@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.Mixin;
  * @author IzumiiKonata
  * Date: 2026/5/10 23:20
  */
-@Mixin(AvatarRenderer.class)
+@Mixin(value = AvatarRenderer.class, remap = false)
 public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractClientPlayer, AvatarRenderState, PlayerModel> {
 
     public PlayerRendererMixin(EntityRendererProvider.Context context, PlayerModel entityModel, float f) {
@@ -26,7 +26,7 @@ public abstract class PlayerRendererMixin extends LivingEntityRenderer<AbstractC
     }
 
     @Override
-    public void submit(AvatarRenderState livingEntityRenderState, PoseStack poseStack, net.minecraft.client.renderer.SubmitNodeCollector submitNodeCollector, net.minecraft.client.renderer.state.CameraRenderState cameraRenderState) {
+    public void submit(AvatarRenderState livingEntityRenderState, PoseStack poseStack, net.minecraft.client.renderer.SubmitNodeCollector submitNodeCollector, net.minecraft.client.renderer.state.level.CameraRenderState cameraRenderState) {
         Entity entity = EntityRenderStateBindings.get(livingEntityRenderState);
         if (entity instanceof Player player) {
             if (ReplacePlayerRenderEvent.onRenderPlayerPre(player, livingEntityRenderState, Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true), poseStack, submitNodeCollector, cameraRenderState)) {

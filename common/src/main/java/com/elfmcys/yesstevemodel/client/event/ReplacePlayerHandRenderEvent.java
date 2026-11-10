@@ -9,7 +9,7 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
 
@@ -18,7 +18,7 @@ public class ReplacePlayerHandRenderEvent {
     private ReplacePlayerHandRenderEvent() {
     }
 
-    public static boolean onRenderArm(Player player, HumanoidArm arm, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    public static boolean onRenderArm(Player player, HumanoidArm arm, PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight) {
         if (!YesSteveModel.isAvailable() || GeneralConfig.DISABLE_SELF_MODEL.get() || GeneralConfig.DISABLE_SELF_HANDS.get()) {
             return false;
         }

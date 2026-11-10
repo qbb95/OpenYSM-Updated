@@ -13,16 +13,16 @@ import net.minecraft.world.entity.Entity;
 
 import java.util.Collection;
 
-@Mixin(LivingEntity.class)
+@Mixin(value = LivingEntity.class, remap = false)
 public abstract class LivingEntityEffectMixin {
 
-    @Inject(method = "onEffectAdded", at = @At("TAIL"))
+    @Inject(method = "onEffectAdded(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)V", at = @At("TAIL"))
     private void ysm$onEffectAdded(MobEffectInstance instance, Entity source, CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
         MobEffectEvent.onEffectAdded(self, instance.getEffect(), instance.getAmplifier());
     }
 
-    @Inject(method = "onEffectsRemoved", at = @At("HEAD"))
+    @Inject(method = "onEffectsRemoved(Ljava/util/Collection;)V", at = @At("HEAD"))
     private void ysm$onEffectsRemoved(Collection<MobEffectInstance> collection, CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
         for (MobEffectInstance mobEffectInstance : collection) {

@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin({Projectile.class})
+@Mixin(value = Projectile.class, remap = false)
 public class ProjectileEntityMixin {
     @Inject(at = {@At("RETURN")}, method = {"setOwner(Lnet/minecraft/world/entity/Entity;)V"})
     private void onSetOwner(Entity entity, CallbackInfo callbackInfo) {

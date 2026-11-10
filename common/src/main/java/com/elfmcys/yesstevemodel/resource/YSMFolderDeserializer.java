@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.stream.Stream;
+import java.util.zip.ZipException;
 
 import static com.elfmcys.yesstevemodel.util.DigestUtil.md5Hex;
 import static com.elfmcys.yesstevemodel.util.DigestUtil.sha256Hex;
@@ -37,6 +38,7 @@ public class YSMFolderDeserializer implements AutoCloseable {
     private final Path rootPath;
     private final FileSystem zipFileSystem;
     private final RawYsmModel model;
+    private boolean legacyFormat;
 
     private final Map<String, byte[]> inMemoryFiles;
 
@@ -52,14 +54,39 @@ public class YSMFolderDeserializer implements AutoCloseable {
             this.zipFileSystem = null;
         } else if (sourcePath.toString().endsWith(".zip") || sourcePath.toString().endsWith(".ysm")) {
             URI uri = URI.create("jar:" + sourcePath.toUri());
-            this.zipFileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap());
-            this.rootPath = this.zipFileSystem.getPath("/");
+            this.zipFileSystem = openArchive(uri);
+            Path archiveRoot = this.zipFileSystem.getPath("/");
+            // Model archives sometimes wrap their resources in one directory.
+            // Descend only through an unambiguous wrapper, keeping all reads
+            // inside this ZIP filesystem.
+            while (!isModelFolder(archiveRoot)) {
+                List<Path> children;
+                try (Stream<Path> entries = Files.list(archiveRoot)) {
+                    children = entries.filter(Files::isDirectory)
+                            .filter(p -> !p.getFileName().toString().equals("__MACOSX"))
+                            .toList();
+                }
+                if (children.size() != 1) break;
+                archiveRoot = children.getFirst();
+            }
+            this.rootPath = archiveRoot;
         } else {
             throw new IllegalArgumentException("Unsupported file type. Expected directory or .zip");
         }
 
         this.model = new RawYsmModel();
         this.model.formatVersion = 65535;
+    }
+
+    private static FileSystem openArchive(URI uri) throws IOException {
+        try {
+            return FileSystems.newFileSystem(uri, Collections.emptyMap());
+        } catch (ZipException invalidNames) {
+            // Older Chinese model packs used local filenames without ZIP's
+            // UTF-8 flag. Keep UTF-8 as the default; retry only name decoding.
+            if (!invalidNames.getMessage().contains("bad entry name")) throw invalidNames;
+            return FileSystems.newFileSystem(uri, Map.of("encoding", "GB18030"));
+        }
     }
 
     public YSMFolderDeserializer(Map<String, byte[]> memoryFiles) {
@@ -105,7 +132,10 @@ public class YSMFolderDeserializer implements AutoCloseable {
             String jsonStr = new String(ysmJsonBytes, StandardCharsets.UTF_8);
             JsonObject ysmJson = JsonParser.parseString(jsonStr).getAsJsonObject();
             parseYsmJson(ysmJson);
-        } else parseLegacyFormat();
+        } else {
+            legacyFormat = true;
+            parseLegacyFormat();
+        }
 
         parseGlobalResources();
 
@@ -497,6 +527,12 @@ public class YSMFolderDeserializer implements AutoCloseable {
                 geo.visibleBoundsOffset = new float[0];
             }
 
+            if (legacyFormat && modelType == 1) {
+                // Legacy packs store player dimensions in main.json rather
+                // than ysm.json. Keeping the generic 0.7 defaults shrinks them.
+                model.properties.widthScale = (float) getDouble(desc, "ysm_width_scale", model.properties.widthScale);
+                model.properties.heightScale = (float) getDouble(desc, "ysm_height_scale", model.properties.heightScale);
+            }
             if (modelType == 1 && desc.has("ysm_extra_info")) { // legacy
                 parseLegacyMetadata(desc.getAsJsonObject("ysm_extra_info"), false);
             }
@@ -1047,6 +1083,9 @@ public class YSMFolderDeserializer implements AutoCloseable {
     private String calculateFinalFolderHash() {
         try {
             MessageDigest digest = MessageDigest.getInstance("MD5");
+            // Parsing semantics are part of cache identity: caches created
+            // before legacy scales were restored must be rebuilt on both ends.
+            digest.update("openysm-folder-26.2-v2\0".getBytes(StandardCharsets.UTF_8));
             for (Map.Entry<String, String> entry : readFilesMd5Map.entrySet()) {
                 digest.update(entry.getKey().getBytes(StandardCharsets.UTF_8));
                 digest.update(entry.getValue().getBytes(StandardCharsets.UTF_8));

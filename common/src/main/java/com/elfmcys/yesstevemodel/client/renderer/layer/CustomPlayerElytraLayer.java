@@ -13,11 +13,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.object.equipment.ElytraModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer;
+import net.minecraft.client.resources.model.EquipmentClientInfo;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,13 +33,15 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
     private static final Identifier WINGS_LOCATION = Identifier.parse("textures/entity/equipment/wings/elytra.png");
 
     private final ElytraModel elytraModel;
+    private final EquipmentLayerRenderer equipmentRenderer;
 
     public CustomPlayerElytraLayer(EntityRendererProvider.Context context) {
         this.elytraModel = new ElytraModel(context.getModelSet().bakeLayer(ModelLayers.ELYTRA));
+        this.equipmentRenderer = context.getEquipmentRenderer();
     }
 
     @Override
-    public void render(AvatarRenderState state, PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+    public void render(AvatarRenderState state, PoseStack poseStack, DeferredBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         Identifier cloakTextureLocation;
         LivingEntity entity = entityLivingBaseIn.getEntity();
         ItemStack stack = CosmeticArmorHelper.getElytraItem(entity);
@@ -54,8 +59,15 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             renderElytra(poseStack, animatedGeoModel);
 //            poseStack.translate(0.0d, 1.5d, 0.0d);
             poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
-            this.elytraModel.setupAnim(state);
-            this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getFoilBuffer(bufferSource, RenderTypes.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);
+            Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
+            if (equippable != null && equippable.assetId().isPresent()) {
+                // Vanilla preserves enchanted glint and skin textures while
+                // taking snapshots for the deferred model renderer.
+                this.equipmentRenderer.renderLayers(EquipmentClientInfo.LayerType.WINGS,
+                        equippable.assetId().get(), this.elytraModel, state, stack,
+                        poseStack, bufferSource.collector(), packedLightIn,
+                        cloakTextureLocation, state.outlineColor, 0);
+            }
             poseStack.popPose();
         }
     }

@@ -2,7 +2,7 @@ package rip.ysm.gui.components;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import rip.ysm.gui.OptionRow;
 
@@ -17,15 +17,15 @@ public final class LabelValueRow extends OptionRow<Object> {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void extractWidgetRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         g.fill(getX(), getY(), getX() + width, getY() + height, 0x90000000);
         Component label = Component.translatable(labelKey).withStyle(ChatFormatting.AQUA);
-        g.drawString(Minecraft.getInstance().font, label, getX() + 8, getY() + (height - 8) / 2, -1, false);
+        g.text(Minecraft.getInstance().font, label, getX() + 8, getY() + (height - 8) / 2, -1, false);
         int labelW = Minecraft.getInstance().font.width(label);
-        g.drawString(Minecraft.getInstance().font, Component.literal(value), getX() + 8 + labelW + 6, getY() + (height - 8) / 2, 0xFFCCCCCC, false);
+        g.text(Minecraft.getInstance().font, Component.literal(value), getX() + 8 + labelW + 6, getY() + (height - 8) / 2, 0xFFCCCCCC, false);
     }
 
     @Override
-    protected void renderControl(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderControl(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
     }
 }

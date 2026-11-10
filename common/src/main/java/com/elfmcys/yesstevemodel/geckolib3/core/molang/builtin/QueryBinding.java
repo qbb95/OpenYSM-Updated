@@ -56,14 +56,14 @@ public class QueryBinding extends ContextBinding {
         var("life_time", ctx -> ctx.geoInstance().getSeekTime() / 20.0d);
         var("head_x_rotation", ctx -> ctx.data().netHeadYaw);
         var("head_y_rotation", ctx -> ctx.data().headPitch);
-        var("moon_phase", ctx -> (int) ((ctx.level().getDayTime() / 24000L) % 8L));
-        var("time_of_day", ctx -> MolangUtils.normalizeTime(ctx.level().getDayTime()));
-        var("time_stamp", ctx -> ctx.level().getDayTime());
+        var("moon_phase", ctx -> (int) ((ctx.level().getDefaultClockTime() / 24000L) % 8L));
+        var("time_of_day", ctx -> MolangUtils.normalizeTime(ctx.level().getDefaultClockTime()));
+        var("time_stamp", ctx -> ctx.level().getDefaultClockTime());
         var("delta_time", ctx -> ctx.geoInstance().getPositionTracker().getTimeDelta() / 20.0f);
 
         entityVar("yaw_speed", QueryBinding::getYawSpeed);
         entityVar("cardinal_facing_2d", ctx -> ctx.entity().getDirection().get3DDataValue());
-        entityVar("distance_from_camera", ctx -> ctx.mc().gameRenderer.getMainCamera().position().distanceTo(ctx.entity().position()));
+        entityVar("distance_from_camera", ctx -> ctx.mc().gameRenderer.mainCamera().position().distanceTo(ctx.entity().position()));
         entityVar("eye_target_x_rotation", ctx -> ctx.entity().getViewXRot(ctx.animationEvent().getPartialTick()));
         entityVar("eye_target_y_rotation", ctx -> ctx.entity().getViewYRot(ctx.animationEvent().getPartialTick()));
         entityVar("ground_speed", ctx -> getGroundSpeed(ctx.entity()));

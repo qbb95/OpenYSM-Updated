@@ -2,7 +2,7 @@ package com.elfmcys.yesstevemodel.client.renderer;
 
 import com.elfmcys.yesstevemodel.client.entity.CustomPlayerEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,13 +13,19 @@ public final class PreviewEntityRegistry {
 
     @FunctionalInterface
     public interface SceneryRenderer {
-        void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight);
+        void render(PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight);
+    }
+
+    @FunctionalInterface
+    public interface ModelPoseTransform {
+        void apply(PoseStack poseStack);
     }
 
     public record Entry(
             CustomPlayerEntity animatable,
             @Nullable SceneryRenderer beforeEntity,
-            @Nullable SceneryRenderer afterEntity
+            @Nullable SceneryRenderer afterEntity,
+            @Nullable ModelPoseTransform modelPoseTransform
     ) {
     }
 
@@ -29,7 +35,7 @@ public final class PreviewEntityRegistry {
     }
 
     public static void register(EntityRenderState state, CustomPlayerEntity animatable) {
-        ENTRIES.put(state, new Entry(animatable, null, null));
+        ENTRIES.put(state, new Entry(animatable, null, null, null));
     }
 
     public static void register(
@@ -38,7 +44,17 @@ public final class PreviewEntityRegistry {
             @Nullable SceneryRenderer beforeEntity,
             @Nullable SceneryRenderer afterEntity
     ) {
-        ENTRIES.put(state, new Entry(animatable, beforeEntity, afterEntity));
+        register(state, animatable, beforeEntity, afterEntity, null);
+    }
+
+    public static void register(
+            EntityRenderState state,
+            CustomPlayerEntity animatable,
+            @Nullable SceneryRenderer beforeEntity,
+            @Nullable SceneryRenderer afterEntity,
+            @Nullable ModelPoseTransform modelPoseTransform
+    ) {
+        ENTRIES.put(state, new Entry(animatable, beforeEntity, afterEntity, modelPoseTransform));
     }
 
     @Deprecated

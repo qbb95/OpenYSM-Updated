@@ -15,6 +15,7 @@ import com.elfmcys.yesstevemodel.resource.YSMBinaryDeserializer;
 import com.elfmcys.yesstevemodel.resource.YSMBinarySerializer;
 import com.elfmcys.yesstevemodel.resource.YSMClientMapper;
 import com.elfmcys.yesstevemodel.resource.YSMFolderDeserializer;
+import com.elfmcys.yesstevemodel.resource.ServerMetadataCache;
 import com.elfmcys.yesstevemodel.resource.NativeParseUtil;
 import com.elfmcys.yesstevemodel.resource.pojo.RawYsmModel;
 import com.elfmcys.yesstevemodel.util.YSMNativeHelper;
@@ -57,6 +58,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -100,7 +102,8 @@ public final class ServerModelManager {
     private static Set<String> AUTH_MODELS = Sets.newHashSet();
 
     private static final Map<UUID, PlayerSyncState> syncStates = new ConcurrentHashMap<>();
-    private static final Map<String, ServerPackData> packs = new ConcurrentHashMap<>();
+    private static volatile Map<String, ServerPackData> packs = Map.of();
+    private static final AtomicBoolean modelReloadPending = new AtomicBoolean();
     private static final SecureRandom theRandom = new SecureRandom();
     public static byte[] serverKey;
     private static volatile boolean initialized = false;
@@ -380,6 +383,7 @@ public final class ServerModelManager {
     }
 
     static class PlayerSyncState {
+        final Connection connection;
         byte[] clientKey = new byte[56];
         byte[] key1;
         byte[] clientNextKey;
@@ -387,7 +391,10 @@ public final class ServerModelManager {
         List<ServerModelData> allowedModels = new ArrayList<>();
 
         // TODO: 未来可基于UUID持久化，这里目前每次加入生成固定clientKey
-        PlayerSyncState() {new Random(114514).nextBytes(clientKey);}
+        PlayerSyncState(Connection connection) {
+            this.connection = connection;
+            new Random(114514).nextBytes(clientKey);
+        }
     }
 
     public static void nativeSendModelData(UUID uuid, @Nullable ByteBuffer data) {
@@ -453,14 +460,15 @@ public final class ServerModelManager {
             Set<String> authIds = new HashSet<>();
             Set<String> validCacheFiles = new HashSet<>();
 
-            packs.clear();
-            scanDirectoryPacks(BUILT);
-            scanDirectoryPacks(CUSTOM);
-            scanDirectoryPacks(AUTH);
+            Map<String, ServerPackData> loadedPacks = new LinkedHashMap<>();
+            scanDirectoryPacks(BUILT, loadedPacks);
+            scanDirectoryPacks(CUSTOM, loadedPacks);
+            scanDirectoryPacks(AUTH, loadedPacks);
 
-            scanDirectoryModels(BUILT, CACHE_SERVER, loadedModels, authIds, validCacheFiles, false);
-            scanDirectoryModels(CUSTOM, CACHE_SERVER, loadedModels, authIds, validCacheFiles, false);
-            scanDirectoryModels(AUTH, CACHE_SERVER, loadedModels, authIds, validCacheFiles, true);
+            ServerMetadataCache metadataCache = new ServerMetadataCache(CACHE.resolve("source_metadata_v1"), CACHE_SERVER, serverKey);
+            scanDirectoryModels(BUILT, CACHE_SERVER, loadedModels, authIds, validCacheFiles, false, metadataCache);
+            scanDirectoryModels(CUSTOM, CACHE_SERVER, loadedModels, authIds, validCacheFiles, false, metadataCache);
+            scanDirectoryModels(AUTH, CACHE_SERVER, loadedModels, authIds, validCacheFiles, true, metadataCache);
             try (Stream<Path> stream = Files.list(CACHE_SERVER)) {
                 stream.forEach(file -> {
                     if (!validCacheFiles.contains(file.getFileName().toString())) {
@@ -470,7 +478,10 @@ public final class ServerModelManager {
             } catch (Exception ignored) {}
 
             ModelLoadResult result = new ModelLoadResult(true, null, loadedModels, authIds.toArray(new String[0]));
+            packs = Map.copyOf(loadedPacks);
             AUTH_MODELS = authIds;
+            YesSteveModel.LOGGER.info("[YSM] Source cache: {} hits, {} rebuilt, {} models",
+                    metadataCache.hits(), metadataCache.rebuilt(), loadedModels.size());
 
             onModelLoadComplete(result, callback);
             return true;
@@ -480,7 +491,7 @@ public final class ServerModelManager {
         }
     }
 
-    private static void scanDirectoryModels(Path baseDir, Path cacheDir, Map<String, ServerModelData> loaded, Set<String> authIds, Set<String> validCaches, boolean isAuth) {
+    private static void scanDirectoryModels(Path baseDir, Path cacheDir, Map<String, ServerModelData> loaded, Set<String> authIds, Set<String> validCaches, boolean isAuth, ServerMetadataCache metadataCache) {
         if (baseDir == null || !Files.isDirectory(baseDir)) return;
 
         try {
@@ -494,6 +505,13 @@ public final class ServerModelManager {
                     try {
                         if (YSMFolderDeserializer.isModelFolder(dir)) {
                             String modelId = baseDir.relativize(dir).toString().replace('\\', '/');
+                            String fingerprint = ServerMetadataCache.fingerprint(dir);
+                            ServerModelData cached = metadataCache.load(fingerprint, modelId, isAuth, validCaches);
+                            if (cached != null) {
+                                loaded.put(modelId, cached);
+                                if (isAuth) authIds.add(modelId);
+                                return FileVisitResult.SKIP_SUBTREE;
+                            }
 
                             RawYsmModel rawModel = null;
                             try (YSMFolderDeserializer deserializer = new YSMFolderDeserializer(dir)) {
@@ -505,11 +523,12 @@ public final class ServerModelManager {
                             if (rawModel != null) {
                                 try {
                                     ServerModelData data = processAndCacheModel(modelId, rawModel, cacheDir, isAuth, validCaches);
-                                    rawModel = null;
                                     if (data != null) {
+                                        metadataCache.store(fingerprint, rawModel, data);
                                         loaded.put(modelId, data);
                                         if (isAuth) authIds.add(modelId);
                                     }
+                                    rawModel = null;
                                 } catch (Exception e) {
                                     YesSteveModel.LOGGER.error("Failed to process model at: " + dir, e);
                                 }
@@ -526,16 +545,29 @@ public final class ServerModelManager {
 
                 @Override
                 public @NotNull FileVisitResult visitFile(@NotNull Path file, @NotNull BasicFileAttributes attrs) {
-                    if (!file.getFileName().toString().endsWith(".ysm")) return FileVisitResult.CONTINUE;
+                    String fileName = file.getFileName().toString().toLowerCase(Locale.ROOT);
+                    boolean isArchive = fileName.endsWith(".zip");
+                    if (!isArchive && !fileName.endsWith(".ysm")) return FileVisitResult.CONTINUE;
 
                     try {
                         String modelId = baseDir.relativize(file).toString().replace('\\', '/');
                         byte[] raw = Files.readAllBytes(file);
+                        String fingerprint = ServerMetadataCache.fingerprint(raw);
+                        ServerModelData cached = metadataCache.load(fingerprint, modelId, isAuth, validCaches);
+                        if (cached != null) {
+                            loaded.put(modelId, cached);
+                            if (isAuth) authIds.add(modelId);
+                            return FileVisitResult.CONTINUE;
+                        }
                         int ysmCryptoVersion = YesModelUtils.getYsmCryptoVersion(raw);
 
                         RawYsmModel rawModel = null;
                         try {
-                            if (ysmCryptoVersion == 1 || ysmCryptoVersion == 2) { // 旧版加密模型
+                            if (isArchive) {
+                                try (YSMFolderDeserializer deserializer = new YSMFolderDeserializer(file)) {
+                                    rawModel = deserializer.deserialize();
+                                }
+                            } else if (ysmCryptoVersion == 1 || ysmCryptoVersion == 2) { // 旧版加密模型
                                 Map<String, byte[]> input = YesModelUtils.input(raw);
                                 try (YSMFolderDeserializer deserializer = new YSMFolderDeserializer(input)) {
                                     rawModel = deserializer.deserialize();
@@ -548,17 +580,19 @@ public final class ServerModelManager {
                                 }
                             }
                         } catch (Exception e) {
+                            if (isArchive) throw e;
                             // Java 路径失败（含 -1 未知版本），回退到原生 YSMParser
                             rawModel = null;
                         }
 
-                        if (rawModel == null) {
+                        if (rawModel == null && !isArchive) {
                             rawModel = NativeParseUtil.parseNative(raw, modelId);
                         }
 
                         if (rawModel != null) {
                             ServerModelData data = processAndCacheModel(modelId, rawModel, cacheDir, isAuth, validCaches);
                             if (data != null) {
+                                metadataCache.store(fingerprint, rawModel, data);
                                 loaded.put(modelId, data);
                                 if (isAuth) authIds.add(modelId);
                             }
@@ -574,7 +608,7 @@ public final class ServerModelManager {
         }
     }
 
-    private static void scanDirectoryPacks(Path baseDir) {
+    private static void scanDirectoryPacks(Path baseDir, Map<String, ServerPackData> loadedPacks) {
         if (baseDir == null || !Files.isDirectory(baseDir)) return;
         try (var stream = Files.walk(baseDir, 1)) {
             stream.filter(Files::isDirectory).forEach(path -> {
@@ -613,7 +647,7 @@ public final class ServerModelManager {
                             packData.iconHeight = dims[1];
                             packData.iconFormat = 2; // 2=PNG
                         }
-                        packs.put(packData.folderPath, packData);
+                        loadedPacks.put(packData.folderPath, packData);
                     } catch (Exception e) {
                         YesSteveModel.LOGGER.error("Failed to load pack metadata: " + packJson, e);
                     }
@@ -700,7 +734,10 @@ public final class ServerModelManager {
                 if (currentServer == null) return;
 
                 for (UUID uuid : uuids) {
-                    PlayerSyncState state = syncStates.computeIfAbsent(uuid, k -> new PlayerSyncState());
+                    Connection connection = getPlayerConnection(uuid);
+                    if (connection == null) continue;
+                    PlayerSyncState state = new PlayerSyncState(connection);
+                    syncStates.put(uuid, state);
                     state.allowedModels.clear();
                     state.allowedModels.addAll(CACHE_NAME_INFO.values());
                     state.step = 1;
@@ -728,7 +765,7 @@ public final class ServerModelManager {
                         YsmCrypt.EncryptedPacket result = YsmCrypt.encrypt(outBuf.toArray(), YsmCrypt.publicKey, true);
                         state.key1 = result.nextKey();
 
-                        sendModelData(uuid, ByteBuffer.wrap(result.data()), new PendingTransfer());
+                        sendModelData(uuid, ByteBuffer.wrap(result.data()), new PendingTransfer(), state);
                     }
                 }
 //                if (callback != null) onAuthDataReceived(null, callback);
@@ -764,8 +801,9 @@ public final class ServerModelManager {
                 outBuf.writeVarInt(32); // format
             }
 
-            outBuf.writeVarInt(packs.size());
-            for (ServerPackData pack : packs.values()) {
+            Map<String, ServerPackData> packSnapshot = packs;
+            outBuf.writeVarInt(packSnapshot.size());
+            for (ServerPackData pack : packSnapshot.values()) {
                 outBuf.writeString(pack.folderPath);
 
                 // 寫入圖標資訊
@@ -808,7 +846,7 @@ public final class ServerModelManager {
             outBuf.writeVarInt(0);  // \0
 
             YsmCrypt.EncryptedPacket result = YsmCrypt.encrypt(outBuf.toArray(), state.clientNextKey, false);
-            sendModelData(uuid, ByteBuffer.wrap(result.data()), new PendingTransfer());
+            sendModelData(uuid, ByteBuffer.wrap(result.data()), new PendingTransfer(), state);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -822,6 +860,7 @@ public final class ServerModelManager {
                 PendingTransfer transfer = new PendingTransfer();
 
                 for (long[] hashes : requestedHashes) {
+                    if (!isCurrentSync(uuid, state)) return;
                     long hash1 = hashes[0];
                     long hash2 = hashes[1];
                     String fileName = String.format("%016x%016x", hash1, hash2);
@@ -838,6 +877,7 @@ public final class ServerModelManager {
                     int offset = 0;
 
                     while (offset < totalSize) {
+                        if (!isCurrentSync(uuid, state)) return;
                         int length = Math.min(chunkSize, totalSize - offset);
 
                         int garbageLen = 16 + theRandom.nextInt(48);
@@ -859,11 +899,11 @@ public final class ServerModelManager {
 
 
                             // Stream chunks
-                            boolean success = sendModelData(uuid, ByteBuffer.wrap(result.data()), transfer);
+                            boolean success = sendModelData(uuid, ByteBuffer.wrap(result.data()), transfer, state);
                             if (success) {
                                 offset += length;
                             } else {
-                                try { Thread.sleep(5); } catch (InterruptedException e) {}
+                                return;
                             }
                         }
                     }
@@ -969,6 +1009,23 @@ public final class ServerModelManager {
         });
     }
 
+    public static boolean reloadModelsAsync(@Nullable Consumer<ModelLoadResult> consumer,
+                                           @Nullable Consumer<UUIDComponentData> syncConsumer) {
+        if (!modelReloadPending.compareAndSet(false, true)) return false;
+        YSMThreadPool.submit(() -> {
+            try {
+                if (!loadModels(consumer, syncConsumer) && consumer != null) {
+                    consumer.accept(new ModelLoadResult(false,
+                            Component.literal("Model reload failed; see the server log."),
+                            Map.of(), new String[0]));
+                }
+            } finally {
+                modelReloadPending.set(false);
+            }
+        });
+        return true;
+    }
+
     public static boolean loadModels(@Nullable Consumer<ModelLoadResult> consumer, @Nullable Consumer<UUIDComponentData> consumer2) {
         Consumer<ModelLoadResult> action = modelLoadResult -> {
             if (consumer != null) {
@@ -1040,12 +1097,15 @@ public final class ServerModelManager {
         return ((ServerCommonPacketListenerImplAccessor) serverGamePacketListenerImpl).ysm$getConnection();
     }
 
-    private static boolean sendModelData(UUID uuid, ByteBuffer byteBuffer, PendingTransfer pendingTransfer) {
-        Connection connection = getPlayerConnection(uuid);
-        if (connection != null) {
-            return sendPacketReliably(connection, NetworkHandler.toClientboundPacket(new S2CModelSyncPayload(byteBuffer)), pendingTransfer);
-        }
-        return false;
+    private static boolean isCurrentSync(UUID uuid, PlayerSyncState state) {
+        return syncStates.get(uuid) == state && state.connection.isConnected();
+    }
+
+    private static boolean sendModelData(UUID uuid, ByteBuffer byteBuffer, PendingTransfer pendingTransfer,
+                                         PlayerSyncState state) {
+        if (!isCurrentSync(uuid, state)) return false;
+        return sendPacketReliably(state.connection,
+                NetworkHandler.toClientboundPacket(new S2CModelSyncPayload(byteBuffer)), pendingTransfer);
     }
 
     private static Object createModelPacket(ByteBuffer byteBuffer) {

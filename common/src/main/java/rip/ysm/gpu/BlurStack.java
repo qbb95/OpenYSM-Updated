@@ -3,7 +3,7 @@ package rip.ysm.gpu;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -73,70 +73,30 @@ public final class BlurStack {
         return regions.isEmpty();
     }
 
-    public static void flush(GuiGraphics graphics) {
+    public static void flush(GuiGraphicsExtractor graphics) {
         if (regions.isEmpty()) return;
-        if (!BlurShader.ensureCompiled()) {
-            regions.clear();
-            return;
+        // 26.2 owns blur and render ordering. Blur the preceding GUI stratum,
+        // then submit the queued region tints; never issue GL during extraction.
+        var state = ((com.elfmcys.yesstevemodel.mixin.client.GuiGraphicsExtractorAccessor) graphics)
+                .ysm$getGuiRenderState();
+        // A parent screen or vanilla's background extraction may have already
+        // requested the frame's only blur. Reuse that request for nested panels.
+        if (((com.elfmcys.yesstevemodel.mixin.client.GuiRenderStateAccessor) state)
+                .ysm$getFirstStratumAfterBlur() == Integer.MAX_VALUE) {
+            graphics.blurBeforeThisStratum();
         }
-
-        frameCounter++;
-        BlurShader.captureScreen(frameCounter);
-
-        int sw = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        int sh = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        mvpScratch.identity().ortho(0.0f, sw, sh, 0.0f, 1000.0f, 21000.0f);
-        mvpScratch.mul(RenderSystem.getModelViewMatrix());
-        mvpScratch.mul(graphics.pose());
-        mvpScratch.get(mvpFloats);
-
-        GlStateManager._enableBlend();
-        GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GlStateManager._disableCull();
-        GlStateManager._disableDepthTest();
-
-        GlStateManager._activeTexture(GL13.GL_TEXTURE0);
-        GlStateManager._bindTexture(BlurShader.captureTextureId());
-        GlStateManager._glUseProgram(BlurShader.program());
-
-        if (BlurShader.locProj() >= 0) GL20.glUniformMatrix4fv(BlurShader.locProj(), false, mvpFloats);
-        if (BlurShader.locScreenSize() >= 0)
-            GL20.glUniform2f(BlurShader.locScreenSize(), BlurShader.captureWidth(), BlurShader.captureHeight());
-        if (BlurShader.locGamma() >= 0) GL20.glUniform1f(BlurShader.locGamma(), 6.0f);
-
-        GlStateManager._glBindVertexArray(BlurShader.dummyVao());
-
-        for (Region r : regions) {
-            float tr = ((r.tintRgba >> 16) & 0xFF) / 255.0f;
-            float tg = ((r.tintRgba >> 8) & 0xFF) / 255.0f;
-            float tb = (r.tintRgba & 0xFF) / 255.0f;
-            float ta = ((r.tintRgba >> 24) & 0xFF) / 255.0f;
-            if (BlurShader.locRect() >= 0) GL20.glUniform4f(BlurShader.locRect(), r.x, r.y, r.w, r.h);
-            if (BlurShader.locRectSize() >= 0) GL20.glUniform2f(BlurShader.locRectSize(), r.w, r.h);
-            if (BlurShader.locBlurRadius() >= 0)
-                GL20.glUniform1f(BlurShader.locBlurRadius(), Math.max(1.0f, r.blurRadius));
-            if (BlurShader.locTint() >= 0) GL20.glUniform4f(BlurShader.locTint(), tr, tg, tb, ta);
-            if (r.isPie) {
-                if (BlurShader.locMode() >= 0) GL20.glUniform1i(BlurShader.locMode(), 1);
-                if (BlurShader.locPieCenter() >= 0)
-                    GL20.glUniform2f(BlurShader.locPieCenter(), r.pieCenterX, r.pieCenterY);
-                if (BlurShader.locPieInner() >= 0) GL20.glUniform1f(BlurShader.locPieInner(), r.pieInner);
-                if (BlurShader.locPieOuter() >= 0) GL20.glUniform1f(BlurShader.locPieOuter(), r.pieOuter);
-                if (BlurShader.locPieStart() >= 0) GL20.glUniform1f(BlurShader.locPieStart(), r.pieStart);
-                if (BlurShader.locPieEnd() >= 0) GL20.glUniform1f(BlurShader.locPieEnd(), r.pieEnd);
-                if (BlurShader.locPieFeather() >= 0) GL20.glUniform1f(BlurShader.locPieFeather(), 1.0f);
+        for (Region region : regions) {
+            // White is the neutral multiplicative tint of the old blur shader.
+            if (region.tintRgba == 0xFFFFFFFF) continue;
+            if (region.isPie) {
+                Pie.draw(graphics, region.pieCenterX, region.pieCenterY, region.pieInner,
+                        region.pieOuter, region.pieStart, region.pieEnd, region.tintRgba);
             } else {
-                if (BlurShader.locMode() >= 0) GL20.glUniform1i(BlurShader.locMode(), 0);
-                if (BlurShader.locRadius() >= 0) GL20.glUniform1f(BlurShader.locRadius(), r.cornerRadius);
-                if (BlurShader.locCorner() >= 0) GL20.glUniform4f(BlurShader.locCorner(), 1.0f, 1.0f, 1.0f, 1.0f);
+                graphics.fill((int) region.x, (int) region.y,
+                        (int) Math.ceil(region.x + region.w), (int) Math.ceil(region.y + region.h),
+                        region.tintRgba);
             }
-            GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
         }
-
-        GlStateManager._glUseProgram(0);
-        GlStateManager._glBindVertexArray(0);
-        GlStateManager._disableBlend();
-
         regions.clear();
     }
 
