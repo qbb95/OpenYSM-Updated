@@ -19,7 +19,7 @@ import rip.ysm.api.client.KeyMappingFactory;
 
 public final class PlayerModelToggleKey {
 
-    public static final KeyMapping KEY_MAPPING = KeyMappingFactory.createInGameAlt("key.yes_steve_model.player_model.desc", InputConstants.Type.KEYSYM, 89, KeyMappingFactory.YSM_CATEGORY);
+    public static final KeyMapping KEY_MAPPING = KeyMappingFactory.createInGameAlt("key.yes_steve_model.player_model.desc", InputConstants.Type.KEYBOARD, InputConstants.KEY_Y, KeyMappingFactory.YSM_CATEGORY);
 
     private PlayerModelToggleKey() {
     }

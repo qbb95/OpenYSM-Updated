@@ -37,10 +37,12 @@ def argfile(name, arguments):
                                 for a in arguments), encoding='utf8')
     return '@' + str(target)
 
-sources = [here / 'WireBoundsSmoke.java', here / 'RenderSmoke.java', here / 'OptimizationSmoke.java']
+sources = [here / 'WireBoundsSmoke.java', here / 'RenderSmoke.java', here / 'OptimizationSmoke.java', here / 'ModelTransferSmoke.java', here / 'ModelCacheSmoke.java', here / 'ModelBackendSmoke.java', here / 'MixinTargetsSmoke.java']
+if (here / 'LegacyInputSmoke.java').is_file(): sources.append(here / 'LegacyInputSmoke.java')
 subprocess.run([executable('javac'), argfile('javac.args',
     ['-proc:none', '-cp', classpath, '-d', classes, *sources])], cwd=repo, check=True)
-tests = [('WireBoundsSmoke', []), ('RenderSmoke', [])]
+tests = [('WireBoundsSmoke', []), ('RenderSmoke', []), ('ModelTransferSmoke', []), ('ModelCacheSmoke', []), ('ModelBackendSmoke', []), ('MixinTargetsSmoke', [])]
+if (here / 'LegacyInputSmoke.java').is_file(): tests.append(('LegacyInputSmoke', []))
 if options.legacy_model:
     tests.append(('OptimizationSmoke', [output / 'cache-fixtures', options.legacy_model.resolve()]))
 else:
@@ -49,5 +51,5 @@ for test, arguments in tests:
     print('RUN ' + test, flush=True)
     subprocess.run([executable('java'), argfile(test + '.args',
         ['--enable-native-access=ALL-UNNAMED', '--sun-misc-unsafe-memory-access=allow',
-         '-Djava.awt.headless=true', '-Dstdout.encoding=UTF-8', '-DOYSM_DISABLE_SMID=1',
+         '-Djava.awt.headless=true', '-Dstdout.encoding=UTF-8',
          '-cp', str(classes) + os.pathsep + classpath, test, *arguments])], cwd=repo, check=True)

@@ -143,11 +143,11 @@ public class ModernModelInfoScreen extends OptionScreen {
         Minecraft.getInstance().gui.setScreen(new ConfirmLinkScreen(confirmed -> {
             if (confirmed) {
                 try {
-                    Util.getPlatform().openUri(new URI(url));
+                    com.mojang.blaze3d.Blaze3D.openUri(new URI(url));
                 } catch (Exception ignored) {
                 }
             }
             Minecraft.getInstance().gui.setScreen(this);
-        }, url, true));
+        }, java.net.URI.create(url), true));
     }
 }

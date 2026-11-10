@@ -67,17 +67,17 @@ public final class DeferredBufferSource implements BufferSourceAccessor {
     }
 
     private record Vertex(float x, float y, float z, int color, float u, float v,
-                          int overlay, int light, float nx, float ny, float nz, float lineWidth) {
+                          int overlay, int light, float u3, float v3, float nx, float ny, float nz, float lineWidth) {
         void emit(VertexConsumer output) {
             output.addVertex(x, y, z).setColor(color).setUv(u, v)
-                    .setOverlay(overlay).setLight(light).setNormal(nx, ny, nz).setLineWidth(lineWidth);
+                    .setOverlay(overlay).setLight(light).setUv3(u3, v3).setNormal(nx, ny, nz).setLineWidth(lineWidth);
         }
     }
 
     private static final class RecordingConsumer implements VertexConsumer {
         private final List<Vertex> vertices = new ArrayList<>();
         private boolean pending;
-        private float x, y, z, u, v, nx, nz;
+        private float x, y, z, u, v, u3, v3, nx, nz;
         private float ny = 1.0f;
         private float lineWidth = 1.0f;
         private int color = -1;
@@ -91,7 +91,7 @@ public final class DeferredBufferSource implements BufferSourceAccessor {
             this.y = y;
             this.z = z;
             color = -1;
-            u = v = 0;
+            u = v = u3 = v3 = 0;
             overlay = light = 0;
             nx = nz = 0;
             ny = lineWidth = 1;
@@ -131,6 +131,13 @@ public final class DeferredBufferSource implements BufferSourceAccessor {
         }
 
         @Override
+        public VertexConsumer setUv3(float u, float v) {
+            u3 = u;
+            v3 = v;
+            return this;
+        }
+
+        @Override
         public VertexConsumer setNormal(float x, float y, float z) {
             nx = x;
             ny = y;
@@ -146,7 +153,7 @@ public final class DeferredBufferSource implements BufferSourceAccessor {
 
         private void finishVertex() {
             if (pending) {
-                vertices.add(new Vertex(x, y, z, color, u, v, overlay, light, nx, ny, nz, lineWidth));
+                vertices.add(new Vertex(x, y, z, color, u, v, overlay, light, u3, v3, nx, ny, nz, lineWidth));
                 pending = false;
             }
         }

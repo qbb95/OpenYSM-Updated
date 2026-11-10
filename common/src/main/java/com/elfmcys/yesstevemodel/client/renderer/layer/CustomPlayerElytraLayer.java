@@ -58,7 +58,7 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             poseStack.pushPose();
             renderElytra(poseStack, animatedGeoModel);
 //            poseStack.translate(0.0d, 1.5d, 0.0d);
-            poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
+            poseStack.rotate(Axis.ZP.rotationDegrees(180.0f));
             Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
             if (equippable != null && equippable.assetId().isPresent()) {
                 // Vanilla preserves enchanted glint and skin textures while

@@ -109,14 +109,14 @@ public class ExtraPlayerRenderScreen extends Screen {
         int button = event.button();
         boolean inLeftHandleX = ((double) (this.mouseStartX - this.offsetX)) < mouseX && mouseX < ((double) (this.mouseStartX + this.offsetX));
         boolean inLeftHandleY = ((double) (this.mouseStartY - this.offsetX)) < mouseY && mouseY < ((double) (this.mouseStartY + this.offsetX));
-        if (button == 0 && inLeftHandleX && inLeftHandleY) {
+        if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT && inLeftHandleX && inLeftHandleY) {
             this.isDragging = true;
         }
         int rightHandleX = (int) (this.mouseStartX + (this.rotationX));
         int rightHandleY = (int) (this.mouseStartY + (this.rotationX * 2.0f));
         boolean inRightHandleX = ((double) (rightHandleX - this.offsetX)) < mouseX && mouseX < ((double) (rightHandleX + this.offsetX));
         boolean inRightHandleY = ((double) (rightHandleY - this.offsetX)) < mouseY && mouseY < ((double) (rightHandleY + this.offsetX));
-        if (button == 0 && inRightHandleX && inRightHandleY) {
+        if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT && inRightHandleX && inRightHandleY) {
             this.isRightDragging = true;
         }
         return super.mouseClicked(event, doubleClick);

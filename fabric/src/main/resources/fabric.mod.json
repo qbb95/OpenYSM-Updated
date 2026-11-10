@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "yes_steve_model",
   "version": "${version}",
-  "name": "OpenYSM (26.2 development port)",
+  "name": "Yes Steve Model (unofficial Fabric 26.3 port)",
   "description": "",
   "authors": [
     "Tianjin Accessible Care Innovation Development Co., Ltd."
@@ -30,8 +30,13 @@
   ],
   "depends": {
     "fabricloader": ">=0.20.1",
-    "minecraft": "~26.2",
-    "java": ">=25"
+    "minecraft": "26.3",
+    "java": ">=25",
+    "fabric-api": "*",
+    "architectury": "*",
+    "forgeconfigapiport": "*",
+    "cardinal-components-base": ">=8.0.1",
+    "cardinal-components-entity": ">=8.0.1"
   },
   "suggests": {
     "another-mod": "*"

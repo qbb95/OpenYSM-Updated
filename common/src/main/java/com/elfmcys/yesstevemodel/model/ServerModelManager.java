@@ -57,7 +57,6 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -739,7 +738,8 @@ public final class ServerModelManager {
                     PlayerSyncState state = new PlayerSyncState(connection);
                     syncStates.put(uuid, state);
                     state.allowedModels.clear();
-                    state.allowedModels.addAll(CACHE_NAME_INFO.values());
+                    state.allowedModels.addAll(com.elfmcys.yesstevemodel.util.ModelLoadOrder.prioritize(
+                            CACHE_NAME_INFO, Arrays.asList(modelIds), ServerConfig.DEFAULT_MODEL_ID.get()));
                     state.step = 1;
 
                     // HandshakePing
@@ -1047,7 +1047,9 @@ public final class ServerModelManager {
     }
 
     private static String[] collectPlayerModelIds(Collection<ServerPlayer> collection) {
-        return collection.stream().filter(NetworkHandler::isPlayerConnected).map(serverPlayer -> ModelInfoCapability.get(serverPlayer).map(ModelInfoCapability::getModelId)).filter(Optional::isPresent).map(Optional::get).distinct().toArray(String[]::new);
+        // Persisted model choices are available before the other player's mod
+        // handshake completes. Include simultaneous joiners in the priority set.
+        return collection.stream().map(serverPlayer -> ModelInfoCapability.get(serverPlayer).map(ModelInfoCapability::getModelId)).filter(Optional::isPresent).map(Optional::get).distinct().toArray(String[]::new);
     }
 
     private static void onModelLoadComplete(ModelLoadResult modelLoadResult, @Nullable Object obj) {
@@ -1121,45 +1123,17 @@ public final class ServerModelManager {
     }
 
     private static boolean sendPacketReliably(Connection connection, Object obj, PendingTransfer pendingTransfer) {
-        if (!pendingTransfer.hasStarted) {
-            pendingTransfer.hasStarted = true;
-            pendingTransfer.pendingBytes = ((ConnectionAccessor) connection).ysm$getChannel().unsafe().outboundBuffer().totalPendingWriteBytes() + 65536;
+        if (!connection.isConnected()) return false;
+        var channel = ((ConnectionAccessor) connection).ysm$getChannel();
+        if (channel.eventLoop().inEventLoop()) {
+            throw new IllegalStateException("Model transfer waits must run outside the network event loop");
         }
-
-        final AtomicInteger atomicInteger = new AtomicInteger(0);
-        while (connection.isConnected()) {
-            if (((ConnectionAccessor) connection).ysm$getChannel().unsafe().outboundBuffer().size() > pendingTransfer.pendingBytes) {
-                if (!YSMThreadPool.awaitTermination(10)) {
-                    return false;
-                }
-            } else {
-                try {
-                    connection.send((Packet<?>) obj, (io.netty.channel.ChannelFutureListener) future -> {
-                        if (future.isSuccess()) {
-                            atomicInteger.set(1);
-                        } else {
-                            atomicInteger.set(-1);
-                        }
-                    });
-                    while (atomicInteger.get() == 0) {
-                        if (!YSMThreadPool.awaitTermination(5)) {
-                            return false;
-                        }
-                    }
-                    if (atomicInteger.get() == 1) {
-                        return true;
-                    }
-                    if (!YSMThreadPool.awaitTermination(100)) {
-                        return false;
-                    }
-                    atomicInteger.set(0);
-                } catch (Throwable th) {
-                    th.printStackTrace();
-                    return false;
-                }
-            }
+        boolean sent = com.elfmcys.yesstevemodel.util.ModelPacketWriter.send(
+                listener -> connection.send((Packet<?>) obj, listener), 10_000);
+        if (!sent && connection.isConnected()) {
+            YesSteveModel.LOGGER.warn("[YSM] Model packet write failed or timed out; stopping transfer");
         }
-        return false;
+        return sent;
     }
 
     public static Pair<String, String> getDefaultModelConfig() {
@@ -1210,10 +1184,6 @@ public final class ServerModelManager {
     }
 
     private static class PendingTransfer {
-        public long pendingBytes;
-
-        public boolean hasStarted = false;
-
         private PendingTransfer() {
         }
     }

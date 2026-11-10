@@ -279,11 +279,11 @@ public class PlayerTextureScreen extends Screen {
         if (this.minecraft == null || !isInPreviewArea(mouseX, mouseY)) {
             return false;
         }
-        if (button == 0) {
+        if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
             this.yaw = (float) (this.yaw + (1.5d * dragX));
             adjustPitch((float) dragY);
         }
-        if (button == 1) {
+        if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT) {
             this.offsetX = (float) (this.offsetX + dragX);
             this.offsetY = (float) (this.offsetY + dragY);
             return true;

@@ -151,10 +151,10 @@ public class AuthorButton extends Button {
         if (link.startsWith("http://") || link.startsWith("https://")) {
             Minecraft.getInstance().gui.setScreen(new ConfirmLinkScreen(confirmed -> {
                 if (confirmed) {
-                    Util.getPlatform().openUri(link);
+                    com.mojang.blaze3d.Blaze3D.openUri(java.net.URI.create(link));
                 }
                 Minecraft.getInstance().gui.setScreen(this.parentScreen);
-            }, link, true));
+            }, java.net.URI.create(link), true));
             return;
         }
         Minecraft.getInstance().keyboardHandler.setClipboard(link);

@@ -34,16 +34,16 @@ public class InnerClassify {
         if (TouhouLittleMaidCompat.isMaidItem(item)) {
             return "gohei";
         }
-        if ((item instanceof AxeItem) || itemStack.is(ItemTagsConstants.AXES)) {
+        if (itemStack.is(ItemTagsConstants.AXES)) {
             return "axe";
         }
         if (itemStack.is(ItemTagsConstants.PICKAXES)) {
             return "pickaxe";
         }
-        if ((item instanceof ShovelItem) || itemStack.is(ItemTagsConstants.SHOVELS)) {
+        if (itemStack.is(ItemTagsConstants.SHOVELS)) {
             return "shovel";
         }
-        if ((item instanceof HoeItem) || itemStack.is(ItemTagsConstants.HOES)) {
+        if (itemStack.is(ItemTagsConstants.HOES)) {
             return "hoe";
         }
         if ((item instanceof ShieldItem) || itemStack.is(ItemTagsConstants.SHIELDS)) {

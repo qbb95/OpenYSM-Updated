@@ -39,19 +39,19 @@ public class ItemHoldAnimationPredicate implements IAnimationPredicate<LivingAni
                 return PlayState.CONTINUE;
             }
         }
-        if (livingEntity.swinging && !livingEntity.isSleeping()) {
-            if (livingEntity.swingTime == 0 && ((LivingAnimatable) event.getAnimatable()).getPositionTracker().markProcessed(1)) {
+        if (livingEntity.isSwinging() && !livingEntity.isSleeping()) {
+            if (event.getAnimatable().getPositionTracker().consumeSwingStart()) {
                 event.getController().stopTransition();
             }
             ConditionManager conditionManager = event.getAnimatable().getModelConfig();
-            ConditionSwing conditionSwing = livingEntity.swingingArm == InteractionHand.MAIN_HAND ? conditionManager.getSwingMainhand() : conditionManager.getSwingOffhand();
+            ConditionSwing conditionSwing = com.elfmcys.yesstevemodel.util.SwingCompat.hand(livingEntity) == InteractionHand.MAIN_HAND ? conditionManager.getSwingMainhand() : conditionManager.getSwingOffhand();
             if (conditionSwing != null) {
-                String str2 = conditionSwing.doTest(livingEntity, livingEntity.swingingArm);
+                String str2 = conditionSwing.doTest(livingEntity, com.elfmcys.yesstevemodel.util.SwingCompat.hand(livingEntity));
                 if (StringUtils.isNoneBlank(str2)) {
                     return IAnimationPredicate.playAnimationWithValid(event, str2, ILoopType.EDefaultLoopTypes.PLAY_ONCE, i);
                 }
             }
-            return IAnimationPredicate.playAnimationWithValid(event, livingEntity.swingingArm == InteractionHand.MAIN_HAND ? "swing_hand" : "swing_offhand", ILoopType.EDefaultLoopTypes.PLAY_ONCE, i);
+            return IAnimationPredicate.playAnimationWithValid(event, com.elfmcys.yesstevemodel.util.SwingCompat.hand(livingEntity) == InteractionHand.MAIN_HAND ? "swing_hand" : "swing_offhand", ILoopType.EDefaultLoopTypes.PLAY_ONCE, i);
         }
         return PlayState.CONTINUE;
     }

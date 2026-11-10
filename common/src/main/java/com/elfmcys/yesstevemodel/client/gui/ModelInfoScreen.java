@@ -127,10 +127,10 @@ public class ModelInfoScreen extends Screen {
         if (str != null && StringUtils.isNoneBlank(str)) {
             Minecraft.getInstance().gui.setScreen(new ConfirmLinkScreen(confirmed -> {
                 if (confirmed) {
-                    Util.getPlatform().openUri(str);
+                    com.mojang.blaze3d.Blaze3D.openUri(java.net.URI.create(str));
                 }
                 Minecraft.getInstance().gui.setScreen(this);
-            }, str, true));
+            }, java.net.URI.create(str), true));
         }
     }
 

@@ -9,7 +9,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.text.DecimalFormat;
 
@@ -102,8 +102,8 @@ public class RangedSliderWidget extends AbstractSliderButton {
     @Override
     public boolean keyPressed(KeyEvent event) {
         int keyCode = event.key();
-        boolean leftDir = keyCode == GLFW.GLFW_KEY_LEFT;
-        if (leftDir || keyCode == GLFW.GLFW_KEY_RIGHT) {
+        boolean leftDir = keyCode == InputConstants.KEY_LEFT;
+        if (leftDir || keyCode == InputConstants.KEY_RIGHT) {
             if (this.minValue > this.maxValue) leftDir = !leftDir;
             float dir = leftDir ? -1F : 1F;
             if (stepSize <= 0D) {

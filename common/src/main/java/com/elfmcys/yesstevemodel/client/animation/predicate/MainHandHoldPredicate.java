@@ -72,7 +72,7 @@ public class MainHandHoldPredicate implements IAnimationPredicate<LivingAnimatab
     }
 
     private boolean checkSwingAndUse(LivingEntity entity, InteractionHand hand) {
-        if (entity.swinging && entity.swingingArm == hand) {
+        if (entity.isSwinging() && com.elfmcys.yesstevemodel.util.SwingCompat.hand(entity) == hand) {
             return false;
         }
         return !entity.isUsingItem() || entity.getUsedItemHand() != hand;

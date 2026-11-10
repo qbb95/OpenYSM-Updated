@@ -35,10 +35,10 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
 
     public CustomPlayerRenderer(EntityRendererProvider.Context context) {
         super(context);
-        addLayerRenderer(new CustomPlayerItemInHandLayer(Minecraft.getInstance().gameRenderer.itemInHandRenderer));
+        addLayerRenderer(new CustomPlayerItemInHandLayer());
         addLayerRenderer(new CustomPlayerElytraLayer(context));
         addLayerRenderer(new CustomPlayerParrotLayer(context));
-        addLayerRenderer(new CustomPlayerArmorLayer(context));
+        addLayerRenderer(new CustomPlayerArmorLayer());
     }
 
     public void render(Player player, AvatarRenderState renderState, float entityYaw, float partialTick, PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight) {

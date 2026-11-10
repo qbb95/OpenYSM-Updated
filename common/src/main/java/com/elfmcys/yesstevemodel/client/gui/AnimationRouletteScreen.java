@@ -485,7 +485,7 @@ public class AnimationRouletteScreen extends Screen {
             }
             if (guiEventListener.mouseClicked(scrolledEvent, doubleClick)) {
                 setFocused(guiEventListener);
-                if (button == 0) {
+                if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
                     setDragging(true);
                     return true;
                 }

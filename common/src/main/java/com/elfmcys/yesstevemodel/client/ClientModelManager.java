@@ -76,6 +76,16 @@ public class ClientModelManager {
             }
     );
 
+    // A warm catalog makes every file available at once. Keep that background
+    // workload in manifest order and avoid a burst of simultaneous image/IR
+    // allocations while the render thread is still joining the world.
+    private static final ThreadPoolExecutor cachedModelParseExecutor = new ThreadPoolExecutor(
+            1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), r -> {
+                Thread thread = new Thread(r, "YSM-Cached-Model-Parse");
+                thread.setDaemon(true);
+                return thread;
+            });
+
     /**
      * 组装阶段必须是单线程：{@link ModelAssemblyFactory} 持有静态 primaryAssembly，
      * 非 primary assembly 会按引用 alias 它的动画表，并发组装会互相覆盖。
@@ -319,7 +329,7 @@ public class ClientModelManager {
             boolean alreadyInMemory = modelAssemblyMap != null && modelAssemblyMap.containsKey(modelId);
 
             if (isFileValid) {
-                YesSteveModel.LOGGER.info("[YSM] Cache HIT & Validated: " + ctx.uuid);
+                YesSteveModel.LOGGER.debug("[YSM] Cache HIT & Validated: " + ctx.uuid);
                 if (alreadyInMemory) {
                     previousModelIds.add(modelId);
                     updatedModelIds.add(modelId);
@@ -346,7 +356,7 @@ public class ClientModelManager {
                     });
                 }
             } else {
-                YesSteveModel.LOGGER.info("[YSM] Cache MISS or Invalid: " + ctx.uuid + " -> Requesting...");
+                YesSteveModel.LOGGER.debug("[YSM] Cache MISS or Invalid: {} -> Requesting...", ctx.uuid);
                 modelsToRequest.add(mHash);
                 missingModelCount++;
             }
@@ -428,7 +438,7 @@ public class ClientModelManager {
         syncStep = 3;
         boolean nothingPending = modelsToRequest.isEmpty() && cachedParseTasks.isEmpty();
         pendingModelsCount.set(missingModelCount + cachedParseTasks.size());
-        cachedParseTasks.forEach(ClientModelManager::submitParse);
+        cachedParseTasks.forEach(cachedModelParseExecutor::execute);
         cachedParseTasks.clear();
 
         int garbageLen = 16 + SECURE_RANDOM.nextInt(48);
@@ -525,7 +535,7 @@ public class ClientModelManager {
                         fos.write(transcoded.cacheData());
                     }
 
-                    YesSteveModel.LOGGER.info("[YSM] Downloaded & Cached: " + outFile.getAbsolutePath());
+                    YesSteveModel.LOGGER.debug("[YSM] Downloaded & Cached: " + outFile.getAbsolutePath());
 
                     for (ServerModelContext alias : aliases) {
                         parseAndLoadModel(transcoded.decompressedModel(), alias.modelId, alias.isAuth,
@@ -625,6 +635,7 @@ public class ClientModelManager {
         clientKey = null;
 
         modelParseExecutor.getQueue().clear();
+        cachedModelParseExecutor.getQueue().clear();
         modelAssemblyExecutor.getQueue().clear();
 
         currentCacheFolderName = null;

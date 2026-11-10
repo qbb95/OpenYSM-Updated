@@ -35,7 +35,7 @@ public class RenderSmoke {
   }
  }
  static class Vertex {
-  float x,y,z,u,v,nx,ny,nz,lineWidth;
+  float x,y,z,u,v,u3,v3,nx,ny,nz,lineWidth;
   int color,overlay,light;
  }
  static class Output implements VertexConsumer {
@@ -46,11 +46,12 @@ public class RenderSmoke {
   public VertexConsumer setUv(float u,float v){current.u=u;current.v=v;return this;}
   public VertexConsumer setUv1(int u,int v){current.overlay=u&65535|v<<16;return this;}
   public VertexConsumer setUv2(int u,int v){current.light=u&65535|v<<16;return this;}
+  public VertexConsumer setUv3(float u,float v){current.u3=u;current.v3=v;return this;}
   public VertexConsumer setNormal(float x,float y,float z){current.nx=x;current.ny=y;current.nz=z;return this;}
   public VertexConsumer setLineWidth(float width){current.lineWidth=width;return this;}
  }
  static void quad(VertexConsumer out,PoseStack pose) {
-  for(int i=0;i<4;i++)out.addVertex(pose.last(),i,2,3).setColor(17,34,51,68).setUv(i*.25f,.75f).setOverlay(0x12345678).setLight(0x76543210).setNormal(0,1,0).setLineWidth(2.5f);
+  for(int i=0;i<4;i++)out.addVertex(pose.last(),i,2,3).setColor(17,34,51,68).setUv(i*.25f,.75f).setOverlay(0x12345678).setLight(0x76543210).setUv3(.125f,.625f).setNormal(0,1,0).setLineWidth(2.5f);
  }
  static Output replay(Batch batch) {
   require(batch.matrix().equals(new Matrix4f(),0f),"submitted matrix must be identity");
@@ -75,6 +76,7 @@ public class RenderSmoke {
    require(v.x==10+i*2 && v.y==26 && v.z==42,"transformation applied incorrectly/doubled");
    require(v.color==0x44112233 && v.u==i*.25f && v.v==.75f,"color/uv snapshot changed");
    require(v.overlay==0x12345678 && v.light==0x76543210,"packed light/overlay changed");
+   require(v.u3==.125f && v.v3==.625f,"26.3 UV3 attributes changed");
    require(v.nx==0 && v.ny==1 && v.nz==0 && v.lineWidth==2.5f,"normal/line width changed");
   }
   checks.put("snapshots_immutable_after_source_mutation",true);
@@ -108,6 +110,6 @@ public class RenderSmoke {
   require(RenderContext.collector()==outer.proxy && RenderContext.bufferSource()==saved,"collector failure broke outer scope");
   RenderContext.exit();require(RenderContext.collector()==null,"scope leaked after collector error");
   checks.put("collector_failure_restores_parent_scope",true);
-  System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(Map.of("status","PASS","real_minecraft","26.2","real_render_types",true,"checks",checks,"limits",List.of("Collector and output VertexConsumer are test doubles; no GPU upload or in-game display is exercised."))));
+  System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(Map.of("status","PASS","real_minecraft","26.3","real_render_types",true,"checks",checks,"limits",List.of("Collector and output VertexConsumer are test doubles; no GPU upload or in-game display is exercised."))));
  }
 }

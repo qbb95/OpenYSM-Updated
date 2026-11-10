@@ -23,7 +23,7 @@ public class OpenModelFolderScreen extends Screen {
         int y = (this.height / 2) + 60;
         clearWidgets();
         addRenderableWidget(Button.builder(Component.translatable("gui.yes_steve_model.open_model_folder.open"), button -> {
-            Util.getPlatform().openFile(ServerModelManager.CUSTOM.toFile());
+            com.mojang.blaze3d.Blaze3D.openPath(ServerModelManager.CUSTOM);
         }).bounds(x, y, 150, 20).build());
         addRenderableWidget(Button.builder(Component.translatable("gui.yes_steve_model.model.return"), button2 -> {
             Minecraft.getInstance().gui.setScreen(this.parentScreen);

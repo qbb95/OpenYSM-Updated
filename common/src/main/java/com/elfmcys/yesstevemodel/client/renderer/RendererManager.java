@@ -59,7 +59,8 @@ public class RendererManager {
                 ((EntityRenderDispatcherAccessor) Minecraft.getInstance().getEntityRenderDispatcher()).getEquipmentAssetManager(),
                 Minecraft.getInstance().getAtlasManager(),
                 Minecraft.getInstance().font,
-                Minecraft.getInstance().playerSkinRenderCache()
+                Minecraft.getInstance().playerSkinRenderCache(),
+                Minecraft.getInstance().getPalettedTextureManager()
         );
         playerRenderer = new CustomPlayerRenderer(context);
         projectileRenderer = new ProjectileRenderer(context);

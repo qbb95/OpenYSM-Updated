@@ -88,9 +88,9 @@ public final class ModelPreviewRenderer {
                     return;
                 }
                 float bodyRotation = CustomVehicleRenderer.getBodyRotation(vehicle, Mth.lerp(partialTick, vehicle.yRotO, vehicle.getYRot()), partialTick);
-                poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - bodyRotation));
+                poseStack.rotate(Axis.YP.rotationDegrees(180.0f - bodyRotation));
                 RenderUtils.prepMatrixForLocator(poseStack, list);
-                poseStack.mulPose(Axis.YN.rotationDegrees(180.0f - bodyRotation));
+                poseStack.rotate(Axis.YN.rotationDegrees(180.0f - bodyRotation));
                 double myRidingOffset = -(vehicle.getPassengerRidingPosition(entity).y - vehicle.getY());
                 if (((entity instanceof Player) && PlayerCapability.get(entity).isPresent()) || TouhouLittleMaidCompat.isMaidRideable(entity)) {
                     myRidingOffset -= 0.5d;
@@ -354,7 +354,7 @@ public final class ModelPreviewRenderer {
 
     private static void renderGroundScenery(PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight, float yaw) {
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
+        poseStack.rotate(Axis.YP.rotationDegrees(yaw));
         poseStack.translate(-1.5d, -1.0d, -2.5d);
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -372,7 +372,7 @@ public final class ModelPreviewRenderer {
 
     private static void renderBedScenery(PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight, float yaw) {
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(yaw + 180.0f));
+        poseStack.rotate(Axis.YP.rotationDegrees(yaw + 180.0f));
         poseStack.translate(-0.5d, 0.0d, 0.5d);
         submitBlockScenery(Blocks.BED.red().defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
         poseStack.popPose();
@@ -407,7 +407,7 @@ public final class ModelPreviewRenderer {
         }
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
+        poseStack.rotate(Axis.YP.rotationDegrees(yaw));
         // The vanilla renderer's origin is the vehicle's feet/keel. This scene
         // has its ground plane at y=0; passenger attachment offsets apply to
         // the rider, never to the independently displayed vehicle.

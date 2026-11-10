@@ -32,7 +32,7 @@ public class YSMBinaryDeserializer implements AutoCloseable{
 
 
     private RawYsmModel deserializeInternal(boolean closeOnExit) {
-        System.out.println("deserializing format " + format + " file...");
+        com.elfmcys.yesstevemodel.YesSteveModel.LOGGER.debug("Deserializing model format {}", format);
         if (format < 4) {
             deserializeLegacyV1();
         } else if (format <= 15) {
@@ -50,7 +50,7 @@ public class YSMBinaryDeserializer implements AutoCloseable{
         if (closeOnExit) {
             this.reader.close();
         }
-        System.out.println("end offset: 0x" + Integer.toHexString(offset));
+        com.elfmcys.yesstevemodel.YesSteveModel.LOGGER.debug("Model end offset: 0x{}", Integer.toHexString(offset));
         return model;
     }
 
@@ -404,7 +404,7 @@ public class YSMBinaryDeserializer implements AutoCloseable{
             geoRef.sha256 = hash;
             geoRef.modelType = modelType;
             tempMainModels.add(geoRef);
-            System.out.println("Model Table Entry: ID=" + modelType + ", Hash=" + hash);
+            com.elfmcys.yesstevemodel.YesSteveModel.LOGGER.debug("Model table entry: ID={}, hash={}", modelType, hash);
         }
         assignMainModels(tempMainModels);
 

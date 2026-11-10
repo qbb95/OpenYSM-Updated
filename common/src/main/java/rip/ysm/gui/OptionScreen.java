@@ -494,7 +494,7 @@ public abstract class OptionScreen extends Screen {
             for (OptionRow<?> row : activeRows) {
                 if (row.mouseClicked(adjEvent, doubleClick)) {
                     setFocused(row);
-                    if (button == 0) setDragging(true);
+                    if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) setDragging(true);
                     return true;
                 }
             }

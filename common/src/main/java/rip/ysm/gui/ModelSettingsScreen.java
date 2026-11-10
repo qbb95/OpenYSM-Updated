@@ -213,10 +213,10 @@ public class ModelSettingsScreen extends OptionScreen {
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
         int button = event.button();
         if (draggingPreview && button == draggingButton) {
-            if (button == 0) {
+            if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
                 yaw = (float) (yaw + dragX * 1.2);
                 pitch = Mth.clamp((float) (pitch - dragY * 0.8), -85.0f, 85.0f);
-            } else if (button == 1) {
+            } else if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT) {
                 offsetX = (float) (offsetX + dragX);
                 offsetY = (float) (offsetY + dragY);
             }

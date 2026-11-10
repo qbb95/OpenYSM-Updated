@@ -50,7 +50,7 @@ dependencies {
 
 
 
-    compileOnly "maven.modrinth:iris:gxZWWnKH"
+    compileOnly "maven.modrinth:iris:vTN4NRGW"
 
     // Pull common's compile output (named/mojmap) into fabric for both compile and dev-runtime.
     common(project(':common')) { transitive = false }
@@ -83,11 +83,19 @@ jar {
     from { zipTree(shadowJar.archiveFile.get().asFile) }
 }
 
+// Preserve the Windows stack margin used by Mojang's 26.3 launcher.
+// The same setting is used in the 26.2 Windows regression tests.
+loom.runs.client {
+    if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+        vmArg '-XX:StackShadowPages=32'
+    }
+    vmArg '--add-exports=java.base/jdk.internal.misc=ALL-UNNAMED'
+}
+
 // Opt-in reproducible local testing; it never changes an installed game profile.
 if (project.hasProperty('portSmokeWorld')) {
     loom.runs.client {
         programArgs '--quickPlaySingleplayer', project.property('portSmokeWorld').toString()
         programArgs '--width', '1100', '--height', '700'
-        vmArg '-DOYSM_DISABLE_SMID=1'
     }
 }

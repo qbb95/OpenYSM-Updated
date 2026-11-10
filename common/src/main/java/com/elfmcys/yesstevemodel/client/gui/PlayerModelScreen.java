@@ -590,7 +590,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
             this.searchBox.setFocused(false);
         }
         boolean zMouseClicked = super.mouseClicked(event, doubleClick);
-        if (!zMouseClicked && event.button() == 1 && StringUtils.isNotBlank(currentPath)) {
+        if (!zMouseClicked && event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT && StringUtils.isNotBlank(currentPath)) {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
             navigateUp();
             zMouseClicked = true;
@@ -624,7 +624,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
             return true;
         }
         if (!this.searchBox.keyPressed(event)) {
-            return (this.searchBox.isFocused() && this.searchBox.isVisible() && event.key() != 256) || super.keyPressed(event);
+            return (this.searchBox.isFocused() && this.searchBox.isVisible() && event.key() != com.mojang.blaze3d.platform.InputConstants.KEY_ESCAPE) || super.keyPressed(event);
         }
         if (!Objects.equals(value, this.searchBox.getValue())) {
             resetCurrentPage();
