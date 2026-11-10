@@ -14,8 +14,7 @@ import rip.ysm.compat.gun.tacz.TacCompat;
 import com.elfmcys.yesstevemodel.geckolib3.util.RenderUtils;
 import com.elfmcys.yesstevemodel.util.accessors.BufferSourceAccessor;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.ItemInHandRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
@@ -25,14 +24,8 @@ import com.mojang.math.Axis;
 
 public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEntity> {
 
-    private final ItemInHandRenderer itemRenderer;
-
-    public CustomPlayerItemInHandLayer(ItemInHandRenderer itemInHandRenderer) {
-        this.itemRenderer = itemInHandRenderer;
-    }
-
     @Override
-    public void render(AvatarRenderState state, PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+    public void render(AvatarRenderState state, PoseStack poseStack, DeferredBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         LivingEntity entity = entityLivingBaseIn.getEntity();
         AnimatedGeoModel animatedGeoModel = entityLivingBaseIn.getCurrentModel();
         if (animatedGeoModel == null) {
@@ -73,7 +66,7 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
         }
     }
 
-    public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemDisplayContext itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+    public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemDisplayContext itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, DeferredBufferSource multiBufferSource, int i) {
         if (!itemStack.isEmpty()) {
             SubmitNodeCollector collector = RenderContext.collector();
             if (collector == null) {
@@ -83,23 +76,23 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
             poseStack.pushPose();
             if (!applyItemBoneTransform(humanoidArm, poseStack, model)) {
                 poseStack.translate(0.0d, -0.0625d, -0.1d);
-                poseStack.mulPose(Axis.XP.rotationDegrees(-90.0f));
+                poseStack.rotate(Axis.XP.rotationDegrees(-90.0f));
                 if (SWarfareCompat.isGunItem(itemStack)) {
                     poseStack.translate(0.1d, 0.0d, 0.0d);
                     poseStack.scale(1.25f, 1.25f, 1.25f);
                 }
-                this.itemRenderer.renderItem(livingEntity, itemStack, itemDisplayContext, poseStack, collector, i);
+                com.elfmcys.yesstevemodel.client.renderer.ItemRenderCompat.submit(livingEntity, itemStack, itemDisplayContext, poseStack, collector, i);
             }
             poseStack.popPose();
             (isLeftHand ? model.rightHandChain() : model.leftHandChains()).forEach(list -> {
                 poseStack.pushPose();
                 if (!RenderUtils.prepMatrixForLocator(poseStack, list)) {
                     poseStack.translate(0.0d, -0.0625d, -0.1d);
-                    poseStack.mulPose(Axis.XP.rotationDegrees(-90.0f));
+                    poseStack.rotate(Axis.XP.rotationDegrees(-90.0f));
                     if (SWarfareCompat.isGunItem(itemStack)) {
                         poseStack.scale(1.25f, 1.25f, 1.25f);
                     }
-                    this.itemRenderer.renderItem(livingEntity, itemStack, itemDisplayContext, poseStack, collector, i);
+                    com.elfmcys.yesstevemodel.client.renderer.ItemRenderCompat.submit(livingEntity, itemStack, itemDisplayContext, poseStack, collector, i);
                 }
                 poseStack.popPose();
             });

@@ -24,7 +24,7 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.InputWithModifiers;
@@ -152,7 +152,8 @@ public class ModelButton extends Button {
         }
     }
 
-    public void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    @Override
+    public void extractContents(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         AnimationTracker c0117x8455a741Mo1262xaffeef43 = this.modelIdHolder.getAnimationStateMachine();
         if (isHovered()) {
             this.lastHoverTime = Util.getMillis();
@@ -173,7 +174,7 @@ public class ModelButton extends Button {
         int y = getY();
         guiGraphics.fillGradient(x, y, x + this.width, y + this.height, this.backgroundColor, this.backgroundColor);
         if (this.backgroundTexture != null) {
-            guiGraphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.backgroundTexture.getResourceLocation().get(), x, y, 0.0f, 0.0f, this.width, this.height, this.width, this.height);
+            guiGraphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.backgroundTexture.getIdentifier().get(), x, y, 0.0f, 0.0f, this.width, this.height, this.width, this.height);
         }
 
         guiGraphics.enableScissor(x, y, x + this.width, (y + this.height) - 20);
@@ -191,15 +192,15 @@ public class ModelButton extends Button {
         guiGraphics.disableScissor();
 
         if (this.foregroundTexture != null) {
-            guiGraphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.foregroundTexture.getResourceLocation().get(), x, y, 0.0f, 0.0f, this.width, this.height, this.width, this.height);
+            guiGraphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, this.foregroundTexture.getIdentifier().get(), x, y, 0.0f, 0.0f, this.width, this.height, this.width, this.height);
         }
 
         List listSplit = font.split(getMessage(), 45);
         if (listSplit.size() > 1) {
-            guiGraphics.drawCenteredString(font, (FormattedCharSequence) listSplit.get(0), x + (this.width / 2), (y + this.height) - 19, 0xFFF3F0E0);
-            guiGraphics.drawCenteredString(font, (FormattedCharSequence) listSplit.get(1), x + (this.width / 2), (y + this.height) - 10, 0xFFF3F0E0);
+            guiGraphics.centeredText(font, (FormattedCharSequence) listSplit.get(0), x + (this.width / 2), (y + this.height) - 19, 0xFFF3F0E0);
+            guiGraphics.centeredText(font, (FormattedCharSequence) listSplit.get(1), x + (this.width / 2), (y + this.height) - 10, 0xFFF3F0E0);
         } else {
-            guiGraphics.drawCenteredString(font, getMessage(), x + (this.width / 2), (y + this.height) - 15, 0xFFF3F0E0);
+            guiGraphics.centeredText(font, getMessage(), x + (this.width / 2), (y + this.height) - 15, 0xFFF3F0E0);
         }
 
         if (!this.isStarred && isHoveredOrFocused()) {
@@ -222,7 +223,7 @@ public class ModelButton extends Button {
 
     }
 
-    public void renderTooltip(GuiGraphics guiGraphics, Screen screen, int mouseX, int mouseY) {
+    public void renderTooltip(GuiGraphicsExtractor guiGraphics, Screen screen, int mouseX, int mouseY) {
         if (isHovered()) {
             String selected = Minecraft.getInstance().getLanguageManager().getSelected();
             if (!Objects.equals(this.cachedLanguage, selected)) {
@@ -230,7 +231,7 @@ public class ModelButton extends Button {
                 this.detailedTooltipLines = null;
                 this.tooltipLines = null;
             }
-            if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), 340) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), 344)) {
+            if (InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT)) {
                 if (this.detailedTooltipLines == null) {
                     this.detailedTooltipLines = ModelMetadataPresenter.buildModelTooltip(this.renderContext, selected, this.modelIdHolder.getModelId(), true);
                 }

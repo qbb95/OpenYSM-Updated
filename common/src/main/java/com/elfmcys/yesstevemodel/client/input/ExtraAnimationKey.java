@@ -38,7 +38,7 @@ public final class ExtraAnimationKey {
             initialized = true;
             if (YesSteveModel.isAvailable()) {
                 for (int i = 0; i <= 7; i++) {
-                    KeyMapping eventMapping = KeyMappingFactory.createInGameNone(String.format("key.yes_steve_model.extra_animation.%d.desc", Integer.valueOf(i)), InputConstants.Type.KEYSYM, -1, KeyMappingFactory.YSM_CATEGORY);
+                    KeyMapping eventMapping = KeyMappingFactory.createInGameNone(String.format("key.yes_steve_model.extra_animation.%d.desc", Integer.valueOf(i)), InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), KeyMappingFactory.YSM_CATEGORY);
                     KEY_MAPPINGS.add(eventMapping);
                 }
             }
@@ -76,7 +76,7 @@ public final class ExtraAnimationKey {
                         }
                         if (rouletteKey.startsWith("#") && modelProperties.getExtraAnimationClassify().containsKey(rouletteKey.substring(1))) {
                             AnimationRouletteScreen.setInitialSubmenu(rouletteKey.substring(1));
-                            Minecraft.getInstance().setScreen(new AnimationRouletteScreen(modelProperties.getExtraAnimationButtons(), modelProperties.getExtraAnimationClassify(), modelAssembly, cap));
+                            Minecraft.getInstance().gui.setScreen(new AnimationRouletteScreen(modelProperties.getExtraAnimationButtons(), modelProperties.getExtraAnimationClassify(), modelAssembly, cap));
                             return;
                         }
                         NetworkHandler.sendToServer(new C2SPlayAnimationPacket(index, StringPool.EMPTY));

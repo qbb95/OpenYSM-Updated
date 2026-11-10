@@ -44,11 +44,11 @@ public final class StringExpression implements Expression {
     }
 
     @Nullable
-    public Identifier getResourceLocation() {
+    public Identifier getIdentifier() {
         return this.cachedLocation;
     }
 
-    public void setResourceLocation(@Nullable Identifier Identifier) {
+    public void setIdentifier(@Nullable Identifier Identifier) {
         this.cachedLocation = Identifier;
     }
 

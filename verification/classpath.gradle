@@ -1,0 +1,16 @@
+// Opt-in verification support; does not change the production build configuration.
+gradle.projectsEvaluated {
+    def fabricProject = gradle.rootProject.project(':fabric')
+    def commonProject = gradle.rootProject.project(':common')
+    fabricProject.tasks.register('writeVerificationClasspath') {
+        dependsOn ':common:classes', ':fabric:classes'
+        doLast {
+            def target = fabricProject.layout.buildDirectory.file('verification/classpath.txt').get().asFile
+            target.parentFile.mkdirs()
+            target.setText(fabricProject.files(
+                    commonProject.sourceSets.main.output,
+                    fabricProject.sourceSets.main.runtimeClasspath).asPath, 'UTF-8')
+            println "Verification classpath written to ${target}"
+        }
+    }
+}

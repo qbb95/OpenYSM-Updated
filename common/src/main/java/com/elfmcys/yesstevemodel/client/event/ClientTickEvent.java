@@ -32,7 +32,8 @@ public final class ClientTickEvent {
         ModelUploadSession.tickCurrent();
         ClientModelManager.flushPendingModels();
         ObjectPool.cleanup();
-        refreshRate = client.getWindow().getRefreshRate();
+        var monitor = client.getWindow().findBestMonitor();
+        refreshRate = monitor == null ? 60 : Math.max(1, Math.round(monitor.currentMode().getRefreshRate()));
         LocalPlayer localPlayer = client.player;
         if (localPlayer != null) {
             PlayerCapability.get(localPlayer).ifPresent(cap -> cap.tickAnimations());

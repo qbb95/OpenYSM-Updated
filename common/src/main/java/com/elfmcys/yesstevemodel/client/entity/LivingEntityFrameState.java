@@ -13,6 +13,7 @@ public class LivingEntityFrameState<T extends LivingEntity> extends EntityFrameS
     private ItemStack mainHandItem;
 
     private ItemStack offHandItem;
+    private LivingEntity.SwingDescription lastSwing;
 
     public LivingEntityFrameState(T t) {
         super(t);
@@ -26,6 +27,7 @@ public class LivingEntityFrameState<T extends LivingEntity> extends EntityFrameS
         this.mainHandItem = ItemStack.EMPTY;
         this.offHandItem = ItemStack.EMPTY;
         super.reset();
+        this.lastSwing = null;
     }
 
     @Override
@@ -52,5 +54,18 @@ public class LivingEntityFrameState<T extends LivingEntity> extends EntityFrameS
 
     public ImmersiveMelodiesCompat.ImmersiveMelodiesData getImmersiveMelodiesData() {
         return this.imData;
+    }
+
+    public boolean consumeSwingStart() {
+        var current = this.entity.getCurrentSwing();
+        if (!this.entity.isSwinging()) {
+            this.lastSwing = null;
+            return false;
+        }
+        // Accepted identical swings still have distinct descriptions. Identity
+        // catches starts even when rendering skips the first simulation tick.
+        if (current == this.lastSwing) return false;
+        this.lastSwing = current;
+        return true;
     }
 }

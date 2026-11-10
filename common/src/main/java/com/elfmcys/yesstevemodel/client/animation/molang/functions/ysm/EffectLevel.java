@@ -27,7 +27,7 @@ public class EffectLevel extends ContextFunction<Entity> {
         int effects = 0;
 
         for (int i = 0; i < arguments.size(); i++) {
-            Identifier effectId = arguments.getResourceLocation(context, i);
+            Identifier effectId = arguments.getIdentifier(context, i);
             if (effectId != null) {
                 Holder<MobEffect> mobEffectHolder = BuiltInRegistries.MOB_EFFECT
                         .get(ResourceKey.create(net.minecraft.core.registries.Registries.MOB_EFFECT, effectId))

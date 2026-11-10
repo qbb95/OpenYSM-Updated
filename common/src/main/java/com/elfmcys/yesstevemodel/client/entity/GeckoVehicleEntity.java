@@ -73,7 +73,7 @@ public class GeckoVehicleEntity extends GeoEntity<Entity> {
     @Override
     @NotNull
     public Identifier getTextureLocation() {
-        return ((EntityModelWrapper) getRenderShape()).textureLocatable.getResourceLocation().orElseGet(MissingTextureAtlasSprite::getLocation);
+        return ((EntityModelWrapper) getRenderShape()).textureLocatable.getIdentifier().orElseGet(MissingTextureAtlasSprite::getLocation);
     }
 
     @Override
@@ -113,7 +113,7 @@ public class GeckoVehicleEntity extends GeoEntity<Entity> {
 
         @Override
         public boolean isValid() {
-            return this.textureLocatable.getResourceLocation().isPresent();
+            return this.textureLocatable.getIdentifier().isPresent();
         }
     }
 }

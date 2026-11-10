@@ -30,6 +30,7 @@ public class InputStateKey {
     }
 
     private static void onKeyInput(int keyCode, int action) {
+        keyCode = com.elfmcys.yesstevemodel.util.LegacyInputCodes.keyboard(keyCode);
         if (YesSteveModel.isAvailable() && InputUtil.isPlayerReady() && 32 <= keyCode && keyCode <= 348) {
             if (action == 1) {
                 keyStates[keyCode] = true;
@@ -40,6 +41,7 @@ public class InputStateKey {
     }
 
     private static void onMouseInput(int button, int action) {
+        button = com.elfmcys.yesstevemodel.util.LegacyInputCodes.mouse(button);
         if (YesSteveModel.isAvailable() && InputUtil.isPlayerReady() && 0 <= button && button <= 7) {
             if (action == 1) {
                 mouseStates[button] = true;

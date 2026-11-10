@@ -44,6 +44,13 @@ public class C2SVersionCheckPacket {
                 NetworkHandler.sendToClientPlayer(new S2CSyncStarModelsPacket(cap.getStarModels()), sender);
             });
             ServerModelManager.requestPlayerAuth(sender, null);
+            // Tracking can begin before this connection finishes the YSM
+            // handshake. Replay existing players' state for the new viewer.
+            for (ServerPlayer subject : sender.level().players()) {
+                ModelInfoCapability.get(subject).ifPresent(cap ->
+                        cap.createSyncMessage(subject, true).ifPresent(packet ->
+                                NetworkHandler.sendToClientPlayer(packet, sender)));
+            }
         }
     }
 }

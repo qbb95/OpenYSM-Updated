@@ -23,7 +23,7 @@ public class IsItemNameAny extends LivingEntityFunction {
         ItemStack stack = CosmeticArmorHelper.getArmorItem(context.entity().entity(), slotType);
         if (!stack.isEmpty() && (key = BuiltInRegistries.ITEM.getKey(stack.getItem())) != null) {
             for (int i = 1; i < arguments.size(); i++) {
-                Identifier location = arguments.getResourceLocation(context, i);
+                Identifier location = arguments.getIdentifier(context, i);
                 if (location == null) {
                     return null;
                 }

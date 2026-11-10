@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.concurrent.CompletableFuture;
 
-@Mixin(YSMSoundInstance.class)
+@Mixin(value = YSMSoundInstance.class, remap = false)
 public abstract class YSMSoundInstanceFabricMixin implements FabricSoundInstance {
 
     @Override

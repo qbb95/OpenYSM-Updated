@@ -58,7 +58,7 @@ public class GeckoProjectileEntity extends GeoEntity<Projectile> {
     @Override
     @NotNull
     public Identifier getTextureLocation() {
-        return ((ProjectileModelWrapper) getRenderShape()).textureLocatable.getResourceLocation().orElseGet(MissingTextureAtlasSprite::getLocation);
+        return ((ProjectileModelWrapper) getRenderShape()).textureLocatable.getIdentifier().orElseGet(MissingTextureAtlasSprite::getLocation);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class GeckoProjectileEntity extends GeoEntity<Projectile> {
 
         @Override
         public boolean isValid() {
-            return this.textureLocatable.getResourceLocation().isPresent();
+            return this.textureLocatable.getIdentifier().isPresent();
         }
     }
 }

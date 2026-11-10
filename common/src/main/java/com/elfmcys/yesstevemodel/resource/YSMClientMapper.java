@@ -506,7 +506,7 @@ public class YSMClientMapper {
 
             IValue blendWeight;
             if (ra.blendWeight instanceof Float)
-                blendWeight = new FloatValue((Float) ra.blendWeight);
+                blendWeight = FloatValue.of((Float) ra.blendWeight);
             else if (ra.blendWeight instanceof String)
                 try {
                     blendWeight = parse((String) ra.blendWeight);

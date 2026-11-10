@@ -150,7 +150,7 @@ public class UploadManager {
         }
 
         @Override
-        public Optional<Identifier> getResourceLocation() {
+        public Optional<Identifier> getIdentifier() {
             return this.registered ? Optional.of(this.identifier) : Optional.empty();
         }
 

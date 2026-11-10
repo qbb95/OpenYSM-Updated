@@ -17,7 +17,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
@@ -49,7 +49,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends Player, T extend
 
     public Matrix4f renderEarlyMat = new Matrix4f();
 
-    public MultiBufferSource rtb;
+    public DeferredBufferSource rtb;
 
     private IRenderCycle currentModelRenderCycle = EModelRenderCycle.INITIAL;
 
@@ -74,17 +74,17 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends Player, T extend
     }
 
     @Override
-    public void renderEarly(T animatable, PoseStack poseStack, float partialTick, MultiBufferSource bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
+    public void renderEarly(T animatable, PoseStack poseStack, float partialTick, DeferredBufferSource bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
         // 使用 .set 来避免每次渲染创建新的 Matrix4f, 减少 allocation rate
         this.renderEarlyMat.set(poseStack.last().pose());
         IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
     }
 
-    public void renderEntity(T t, S state, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    public void renderEntity(T t, S state, float entityYaw, float partialTick, PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight) {
         renderEntityWithTexture(t, state, null, entityYaw, partialTick, poseStack, bufferSource, packedLight);
     }
 
-    public void renderEntityWithTexture(T t, S state, @Nullable Identifier identifier, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight) {
+    public void renderEntityWithTexture(T t, S state, @Nullable Identifier identifier, float entityYaw, float partialTick, PoseStack poseStack, DeferredBufferSource multiBufferSource, int packedLight) {
         Direction bedOrientation;
         if (RenderLivingBridge.firePre(t.getEntity(), this, partialTick, poseStack, multiBufferSource, packedLight)) {
             return;
@@ -148,7 +148,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends Player, T extend
                 VehicleCapability.get(t.getEntity().getVehicle()).ifPresent(cap -> {
                     Vector3f vector3f = cap.getExpressionOffset();
                     if (vector3f != null) {
-                        poseStack.mulPose(new Quaternionf().rotateZYX(vector3f.z, 0.0f, vector3f.x).invert());
+                        poseStack.rotate(new Quaternionf().rotateZYX(vector3f.z, 0.0f, vector3f.x).invert());
                     }
                 });
             }
@@ -172,7 +172,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends Player, T extend
             poseStack.popPose();
         }
         net.minecraft.client.renderer.SubmitNodeCollector activeCollector = com.elfmcys.yesstevemodel.client.renderer.RenderContext.collector();
-        net.minecraft.client.renderer.state.CameraRenderState activeCameraState = com.elfmcys.yesstevemodel.client.renderer.RenderContext.camera();
+        net.minecraft.client.renderer.state.level.CameraRenderState activeCameraState = com.elfmcys.yesstevemodel.client.renderer.RenderContext.camera();
         if (activeCollector != null && activeCameraState != null
                 && entity != null && entity != minecraft.getCameraEntity()) {
             ((LivingEntityRendererAccessor) this).tlm$renderNameTag(state, poseStack, activeCollector, activeCameraState);
@@ -180,7 +180,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends Player, T extend
         RenderLivingBridge.firePost(entity, this, partialTick, poseStack, multiBufferSource, packedLight);
     }
 
-    public void render(T entity, S state, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, AnimationEvent<?> event, EntityModelData data) {
+    public void render(T entity, S state, float partialTick, PoseStack poseStack, DeferredBufferSource bufferSource, int packedLightIn, AnimationEvent<?> event, EntityModelData data) {
         for (GeoLayerRenderer<T> layerRenderer : this.layerRenderers) {
             layerRenderer.render(state, poseStack, bufferSource, packedLightIn, entity, event.getLimbSwing(), event.getLimbSwingAmount(), partialTick, data.lerpedAge, data.rawNetHeadYaw, data.rawHeadPitch);
         }
@@ -223,7 +223,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends Player, T extend
     @Override
     public boolean shouldShowName(TEntity entity, double distance) {
         double d = entity.isDiscrete() ? 32.0d : 64.0d;
-        return distance < d * d && entity == this.entityRenderDispatcher.crosshairPickEntity && entity.hasCustomName() && Minecraft.renderNames();
+        return distance < d * d && entity == this.entityRenderDispatcher.crosshairPickEntity && entity.hasCustomName() && !Minecraft.getInstance().gui.hud.isHidden();
     }
 
     public final boolean addLayerRenderer(GeoLayerRenderer<T> layerRenderer) {
@@ -231,12 +231,12 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends Player, T extend
     }
 
     @Override
-    public MultiBufferSource getCurrentRTB() {
+    public DeferredBufferSource getCurrentRTB() {
         return this.rtb;
     }
 
     @Override
-    public void setCurrentRTB(MultiBufferSource bufferSource) {
+    public void setCurrentRTB(DeferredBufferSource bufferSource) {
         this.rtb = bufferSource;
     }
 

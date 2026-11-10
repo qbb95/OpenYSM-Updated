@@ -2,14 +2,14 @@ package com.elfmcys.yesstevemodel.client.gui.button;
 
 import net.minecraft.client.InputType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.text.DecimalFormat;
 
@@ -102,8 +102,8 @@ public class RangedSliderWidget extends AbstractSliderButton {
     @Override
     public boolean keyPressed(KeyEvent event) {
         int keyCode = event.key();
-        boolean leftDir = keyCode == GLFW.GLFW_KEY_LEFT;
-        if (leftDir || keyCode == GLFW.GLFW_KEY_RIGHT) {
+        boolean leftDir = keyCode == InputConstants.KEY_LEFT;
+        if (leftDir || keyCode == InputConstants.KEY_RIGHT) {
             if (this.minValue > this.maxValue) leftDir = !leftDir;
             float dir = leftDir ? -1F : 1F;
             if (stepSize <= 0D) {
@@ -155,11 +155,11 @@ public class RangedSliderWidget extends AbstractSliderButton {
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         Minecraft mc = Minecraft.getInstance();
         guiGraphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, SLIDER_TEXTURE, this.getX(), this.getY(), 0, 0, this.width, this.height, 200, this.height);
         guiGraphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, isHovered() ? SLIDER_HANDLE_HIGHLIGHTED_TEXTURE : SLIDER_HANDLE_TEXTURE, this.getX() + (int) (this.value * (double) (this.width - 8)), this.getY(), 0, 0, 8, this.height, 8, this.height);
         int color = 16777215 | Mth.ceil(this.alpha * 255.0F) << 24;
-        guiGraphics.drawCenteredString(mc.font, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, color);
+        guiGraphics.centeredText(mc.font, this.getMessage(), this.getX() + this.width / 2, this.getY() + (this.height - 8) / 2, color);
     }
 }

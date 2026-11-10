@@ -4,7 +4,7 @@ import com.elfmcys.yesstevemodel.client.event.ReplacePlayerHandRenderEvent;
 import com.elfmcys.yesstevemodel.client.renderer.RenderContext;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.resources.Identifier;
@@ -15,17 +15,17 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(AvatarRenderer.class)
+@Mixin(value = AvatarRenderer.class, remap = false)
 public abstract class ItemInHandRendererMixin {
 
-    @Inject(method = "renderRightHand", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "renderRightHand(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;ILnet/minecraft/resources/Identifier;Z)V", at = @At("HEAD"), cancellable = true)
     public void ysm$onRenderPlayerArm(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int packedLight, Identifier identifier, boolean bl, CallbackInfo ci) {
         if (ysm$dispatchHandRender(poseStack, submitNodeCollector, packedLight, HumanoidArm.RIGHT)) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "renderLeftHand", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "renderLeftHand(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;ILnet/minecraft/resources/Identifier;Z)V", at = @At("HEAD"), cancellable = true)
     public void ysm$onRenderMapHand(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int packedLight, Identifier identifier, boolean bl, CallbackInfo ci) {
         if (ysm$dispatchHandRender(poseStack, submitNodeCollector, packedLight, HumanoidArm.LEFT)) {
             ci.cancel();
@@ -38,8 +38,8 @@ public abstract class ItemInHandRendererMixin {
         if (minecraft.player == null) {
             return false;
         }
-        MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
         RenderContext.enter(submitNodeCollector, null);
+        DeferredBufferSource bufferSource = RenderContext.bufferSource();
         try {
             boolean cancelled = ReplacePlayerHandRenderEvent.onRenderArm(minecraft.player, humanoidArm, poseStack, bufferSource, packedLight);
             if (cancelled) {

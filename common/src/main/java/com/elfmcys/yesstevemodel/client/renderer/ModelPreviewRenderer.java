@@ -19,9 +19,9 @@ import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.NonNullList;
@@ -88,9 +88,9 @@ public final class ModelPreviewRenderer {
                     return;
                 }
                 float bodyRotation = CustomVehicleRenderer.getBodyRotation(vehicle, Mth.lerp(partialTick, vehicle.yRotO, vehicle.getYRot()), partialTick);
-                poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - bodyRotation));
+                poseStack.rotate(Axis.YP.rotationDegrees(180.0f - bodyRotation));
                 RenderUtils.prepMatrixForLocator(poseStack, list);
-                poseStack.mulPose(Axis.YN.rotationDegrees(180.0f - bodyRotation));
+                poseStack.rotate(Axis.YN.rotationDegrees(180.0f - bodyRotation));
                 double myRidingOffset = -(vehicle.getPassengerRidingPosition(entity).y - vehicle.getY());
                 if (((entity instanceof Player) && PlayerCapability.get(entity).isPresent()) || TouhouLittleMaidCompat.isMaidRideable(entity)) {
                     myRidingOffset -= 0.5d;
@@ -100,270 +100,8 @@ public final class ModelPreviewRenderer {
         }
     }
 
-    // 动画测试界面的模型
-    public static void renderEntityPreview(float x, float y, float scale, float pitch, float yaw, float partialTick, AnimatableEntity animatableEntity, AvatarRenderState state, GeoReplacedEntityRenderer renderer, boolean renderGround) {
-        setPreviewMode(true);
-        LivingEntity livingEntity = (LivingEntity) animatableEntity.getEntity();
-        Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
-        modelViewStack.pushMatrix();
-        modelViewStack.translate(x, y, 1250.0f);
-        modelViewStack.scale(1.0f, 1.0f, -1.0f);
-
-        PoseStack poseStack = new PoseStack();
-        poseStack.translate(0.0d, 0.0d, 1000.0d);
-        poseStack.scale(scale, scale, scale);
-        poseStack.translate(0.0d, 0.8d, 0.0d);
-
-        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
-        Quaternionf rotationX = Axis.XP.rotationDegrees((-10.0f) + pitch);
-        rotationZ.mul(rotationX);
-        poseStack.mulPose(rotationZ);
-
-        float oldBodyRot = livingEntity.yBodyRot;
-        float oldBodyRotO = livingEntity.yBodyRotO;
-        float oldYRot = livingEntity.getYRot();
-        float oldYRotO = livingEntity.yRotO;
-        float oldXRot = livingEntity.getXRot();
-        float oldXRotO = livingEntity.xRotO;
-        float oldHeadRotO = livingEntity.yHeadRotO;
-        float oldHeadRot = livingEntity.yHeadRot;
-        Pose oldPose = livingEntity.getPose();
-        livingEntity.yBodyRot = -yaw;
-        livingEntity.yBodyRotO = -yaw;
-        livingEntity.setYRot(180.0f);
-        livingEntity.yRotO = 180.0f;
-        livingEntity.setXRot(0.0f);
-        livingEntity.xRotO = 0.0f;
-        livingEntity.yHeadRot = -yaw;
-        livingEntity.yHeadRotO = -yaw;
-
-        EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        rotationX.conjugate();
-        poseStack.mulPose(rotationX);
-        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-
-        AnimationTracker animationTracker = ((IPreviewAnimatable) animatableEntity).getAnimationStateMachine();
-        if (animationTracker.isCurrentAnimation("sleep")) {
-            poseStack.mulPose(Axis.YP.rotationDegrees(yaw - 90.0f));
-            poseStack.translate(0.5d, 0.5625d, 0.0d);
-            livingEntity.setPose(Pose.SLEEPING);
-        }
-        if (animationTracker.isCurrentAnimation("swim") || animationTracker.isCurrentAnimation("swim_stand")) {
-            livingEntity.setPose(Pose.SWIMMING);
-        }
-        if (animationTracker.isCurrentAnimation("sneak") || animationTracker.isCurrentAnimation("sneaking")) {
-            livingEntity.setPose(Pose.CROUCHING);
-        }
-        if (animationTracker.isCurrentAnimation("sit")) {
-            poseStack.translate(0.0d, -0.5d, 0.0d);
-        }
-        if (animationTracker.isCurrentAnimation("ride")) {
-            poseStack.translate(0.0d, 0.85d, 0.0d);
-        }
-        if (animationTracker.isCurrentAnimation("ride_pig")) {
-            poseStack.translate(0.0d, 0.3125d, 0.0d);
-        }
-        if (animationTracker.isCurrentAnimation("boat")) {
-            poseStack.translate(0.0d, -0.45d, 0.0d);
-        }
-        try {
-            renderVehicleForAnimation(yaw, animatableEntity, partialTick, poseStack, entityRenderDispatcher, bufferSource);
-            if (animationTracker.isCurrentAnimation("sleep")) {
-                renderBedPreview(scale, pitch, yaw, bufferSource);
-            }
-            if (renderGround) {
-                renderGroundPreview(scale, pitch, yaw, bufferSource);
-            }
-            renderer.renderEntity((LivingAnimatable) animatableEntity, state, 0.0f, partialTick, poseStack, bufferSource, 15728880);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-
-        livingEntity.yBodyRot = oldBodyRot;
-        livingEntity.yBodyRotO = oldBodyRotO;
-        livingEntity.setYRot(oldYRot);
-        livingEntity.yRotO = oldYRotO;
-        livingEntity.setXRot(oldXRot);
-        livingEntity.xRotO = oldXRotO;
-        livingEntity.yHeadRotO = oldHeadRotO;
-        livingEntity.yHeadRot = oldHeadRot;
-        livingEntity.setPose(oldPose);
-
-        modelViewStack.popMatrix();
-        setPreviewMode(false);
-    }
-
-    private static void renderBedPreview(float scale, float pitch, float yaw, MultiBufferSource.BufferSource bufferSource) {
-        PoseStack poseStack = new PoseStack();
-        poseStack.translate(0.0d, 0.0d, 1000.0d);
-        poseStack.scale(scale, scale, scale);
-        poseStack.translate(0.0d, 0.8d, 0.0d);
-        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
-        rotationZ.mul(Axis.XP.rotationDegrees((-10.0f) + pitch));
-        poseStack.mulPose(rotationZ);
-        poseStack.mulPose(Axis.YP.rotationDegrees(yaw + 180.0f));
-        poseStack.translate(-0.5d, 0.0d, 0.5d);
-        Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.RED_BED.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
-    }
-
-    private static void renderGroundPreview(float scale, float pitch, float yaw, MultiBufferSource.BufferSource bufferSource) {
-        PoseStack poseStack = new PoseStack();
-        poseStack.translate(0.0d, 0.0d, 1000.0d);
-        poseStack.scale(scale, scale, scale);
-        poseStack.translate(0.0d, 0.8d, 0.0d);
-        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
-        rotationZ.mul(Axis.XP.rotationDegrees((-10.0f) + pitch));
-        poseStack.mulPose(rotationZ);
-        poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
-        poseStack.translate(-1.5d, -1.0d, -2.5d);
-
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                poseStack.translate(0.0f, 0.0f, 1.0f);
-                Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.GRASS_BLOCK.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
-            }
-            poseStack.translate(1.0f, 0.0f, -3.0f);
-        }
-
-        poseStack.translate(-1.0f, 1.0f, 1.0f);
-        Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.SHORT_GRASS.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
-        poseStack.translate(0.0f, 0.0f, 1.0f);
-        Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.RED_TULIP.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
-    }
-
-    private static void renderVehicleForAnimation(float yaw, AnimatableEntity animatableEntity, float partialTick, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource) throws ExecutionException {
-        Entity entity = animatableEntity.getEntity();
-        AnimationTracker animationTracker = ((IPreviewAnimatable) animatableEntity).getAnimationStateMachine();
-
-        if (animationTracker.isCurrentAnimation("ride")) {
-            renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> EntityType.HORSE.create(entity.level(), net.minecraft.world.entity.EntitySpawnReason.LOAD)), partialTick);
-        } else if (animationTracker.isCurrentAnimation("ride_pig")) {
-            renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> EntityType.PIG.create(entity.level(), net.minecraft.world.entity.EntitySpawnReason.LOAD)), partialTick);
-        } else if (animationTracker.isCurrentAnimation("boat")) {
-            renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.OAK_BOAT), () -> EntityType.OAK_BOAT.create(entity.level(), net.minecraft.world.entity.EntitySpawnReason.LOAD)), partialTick);
-        }
-    }
-
-    private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource, Entity vehicleEntity, float partialTick) {
-        poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
-        poseStack.popPose();
-    }
-
-    // 模型预览页面
-    public static <T extends Player, TAnimatable extends LivingAnimatable<T>, S extends AvatarRenderState> void renderLivingEntityPreview(float x, float y, float scale, float partialTick, TAnimatable animatable, S state, GeoReplacedEntityRenderer<T, TAnimatable, S> renderer, boolean disablePreviewRotation, boolean hideEquipment) {
-        ItemStack[] savedEquipment;
-        setPreviewMode(true);
-        LivingEntity livingEntity = animatable.getEntity();
-        Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
-        modelViewStack.pushMatrix();
-        modelViewStack.translate(x, y, 1050.0f);
-        modelViewStack.scale(1.0f, 1.0f, -1.0f);
-
-        PoseStack poseStack = new PoseStack();
-        poseStack.translate(0.0d, disablePreviewRotation ? 5.5d : 0.0d, 1000.0d);
-        poseStack.scale(scale, scale, scale);
-        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
-        Quaternionf rotationX = Axis.XP.rotationDegrees(disablePreviewRotation ? 0.0f : -10.0f);
-        rotationZ.mul(rotationX);
-        poseStack.mulPose(rotationZ);
-
-        float oldBodyRot = livingEntity.yBodyRot;
-        float oldBodyRotO = livingEntity.yBodyRotO;
-        float oldYRot = livingEntity.getYRot();
-        float oldYRotO = livingEntity.yRotO;
-        float oldXRot = livingEntity.getXRot();
-        float oldXRotO = livingEntity.xRotO;
-        float oldHeadRotO = livingEntity.yHeadRotO;
-        float oldHeadRot = livingEntity.yHeadRot;
-        if (hideEquipment && (livingEntity instanceof Player player)) {
-            savedEquipment = new ItemStack[EquipmentSlot.values().length];
-            int slotIndex = 0;
-            for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
-                savedEquipment[slotIndex] = player.getItemBySlot(equipmentSlot).copy();
-                player.setItemSlot(equipmentSlot, ItemStack.EMPTY);
-                slotIndex++;
-            }
-        } else {
-            savedEquipment = null;
-        }
-
-        float previewYaw = disablePreviewRotation ? 180.0f : 200.0f;
-        livingEntity.yBodyRot = previewYaw;
-        livingEntity.yBodyRotO = previewYaw;
-        livingEntity.setYRot(previewYaw);
-        livingEntity.yRotO = previewYaw;
-        livingEntity.setXRot(0.0f);
-        livingEntity.xRotO = 0.0f;
-        livingEntity.yHeadRot = livingEntity.getYRot();
-        livingEntity.yHeadRotO = livingEntity.getYRot();
-
-        Entity vehicle = livingEntity.getVehicle();
-        if (vehicle instanceof LivingEntity) {
-            float vehicleYaw = vehicle.getYRot();
-            poseStack.mulPose(Axis.YP.rotationDegrees(vehicleYaw - previewYaw));
-            livingEntity.yHeadRot = vehicleYaw;
-            livingEntity.yHeadRotO = vehicleYaw;
-        }
-
-        EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        rotationX.conjugate();
-        poseStack.mulPose(rotationX);
-        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-
-        renderer.renderEntity(animatable, state, 0.0f, partialTick, poseStack, bufferSource, 15728880);
-
-        livingEntity.yBodyRot = oldBodyRot;
-        livingEntity.yBodyRotO = oldBodyRotO;
-        livingEntity.setYRot(oldYRot);
-        livingEntity.yRotO = oldYRotO;
-        livingEntity.setXRot(oldXRot);
-        livingEntity.xRotO = oldXRotO;
-        livingEntity.yHeadRotO = oldHeadRotO;
-        livingEntity.yHeadRot = oldHeadRot;
-        if (savedEquipment != null) {
-            Player player = (Player) livingEntity;
-            int slotIndex = 0;
-            for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
-                ItemStack itemStack = savedEquipment[slotIndex];
-                player.setItemSlot(equipmentSlot, itemStack);
-                slotIndex++;
-            }
-        }
-
-        modelViewStack.popMatrix();
-        setPreviewMode(false);
-    }
-
-    // 纸娃娃
-    public static void renderPlayerOverlay(GuiGraphics guiGraphics, LocalPlayer localPlayer, double x, double y, float scale, float yawOffset, int zDepth, float partialTick) {
-        setExtraPlayerMode(true);
-
-        Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
-        modelViewStack.pushMatrix();
-        modelViewStack.translate((float) (x + (scale * 0.5d)), (float) (y + (scale * 2.0f)), 0.0f);
-        modelViewStack.scale(1.0f, 1.0f, -1.0f);
-
-        PoseStack poseStack = new PoseStack();
-        poseStack.translate(0.0f, 0.0f, -zDepth);
-        poseStack.scale(scale, scale, scale);
-
-        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.1f);
-        Quaternionf rotationY = Axis.YP.rotationDegrees((Mth.lerp(partialTick, localPlayer.yBodyRotO, localPlayer.yBodyRot) + yawOffset) - 180.0f);
-        rotationZ.mul(rotationY);
-        poseStack.mulPose(rotationZ);
-
-        EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        rotationY.conjugate();
-        poseStack.mulPose(rotationY);
-        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-
-        modelViewStack.popMatrix();
-        setExtraPlayerMode(false);
-    }
-
     public static void submitLivingEntityPreview(
-            GuiGraphics guiGraphics,
+            GuiGraphicsExtractor guiGraphics,
             int x0, int y0, int x1, int y1,
             int displaySize,
             float partialTick,
@@ -389,7 +127,7 @@ public final class ModelPreviewRenderer {
         CustomPlayerRenderer renderer = RendererManager.getPlayerRenderer();
         AvatarRenderState state = new AvatarRenderState();
         renderer.extractRenderState((Player) entity, state, partialTick);
-        state.lightCoords = net.minecraft.client.renderer.LightTexture.FULL_BRIGHT;
+        state.lightCoords = 15728880;
 
         float previewYaw = disablePreviewRotation ? 180.0F : 200.0F;
         state.bodyRot = previewYaw;
@@ -412,7 +150,7 @@ public final class ModelPreviewRenderer {
         float submitScale = (float) displaySize / entityScale;
 
         guiGraphics.enableScissor(x0, y0, x1, y1);
-        guiGraphics.submitEntityRenderState(state, submitScale, translation, rotation, cameraTilt, x0, y0, x1, y1);
+        guiGraphics.entity(state, submitScale, translation, rotation, cameraTilt, x0, y0, x1, y1);
         guiGraphics.disableScissor();
 
         if (savedEquipment != null) {
@@ -425,7 +163,7 @@ public final class ModelPreviewRenderer {
     }
 
     public static void submitPlayerOverlay(
-            GuiGraphics guiGraphics,
+            GuiGraphicsExtractor guiGraphics,
             LocalPlayer localPlayer,
             double x, double y,
             float scale,
@@ -450,7 +188,7 @@ public final class ModelPreviewRenderer {
         CustomPlayerRenderer renderer = RendererManager.getPlayerRenderer();
         AvatarRenderState state = new AvatarRenderState();
         renderer.extractRenderState(localPlayer, state, partialTick);
-        state.lightCoords = net.minecraft.client.renderer.LightTexture.FULL_BRIGHT;
+        state.lightCoords = 15728880;
         PreviewEntityRegistry.register(state, cap);
 
         state.bodyRot = 180.0F;
@@ -460,11 +198,11 @@ public final class ModelPreviewRenderer {
         Vector3f translation = new Vector3f(0.0F, localPlayer.getBbHeight() / 2.0F, 0.0F);
         float submitScale = scale / entityScale;
 
-        guiGraphics.submitEntityRenderState(state, submitScale, translation, rotation, null, x0, y0, x1, y1);
+        guiGraphics.entity(state, submitScale, translation, rotation, null, x0, y0, x1, y1);
     }
 
     public static void submitTexturePreview(
-            GuiGraphics guiGraphics,
+            GuiGraphicsExtractor guiGraphics,
             int x0, int y0, int x1, int y1,
             float anchorX, float anchorY,
             float zoom,
@@ -506,7 +244,7 @@ public final class ModelPreviewRenderer {
         CustomPlayerRenderer renderer = RendererManager.getPlayerRenderer();
         AvatarRenderState state = new AvatarRenderState();
         renderer.extractRenderState((Player) entity, state, partialTick);
-        state.lightCoords = net.minecraft.client.renderer.LightTexture.FULL_BRIGHT;
+        state.lightCoords = 15728880;
 
         state.bodyRot = -yaw;
         state.yRot = Mth.wrapDegrees(180.0F + yaw);
@@ -522,11 +260,11 @@ public final class ModelPreviewRenderer {
         if (wantGround || wantBed || wantHorse || wantPig || wantBoat) {
             scenery = (poseStack, bufferSource, packedLight) -> {
                 if (wantHorse) {
-                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityType.HORSE);
+                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityTypes.HORSE);
                 } else if (wantPig) {
-                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityType.PIG);
+                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityTypes.PIG);
                 } else if (wantBoat) {
-                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityType.OAK_BOAT);
+                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityTypes.OAK_BOAT);
                 }
                 if (wantBed) {
                     renderBedScenery(poseStack, bufferSource, packedLight, capturedYaw);
@@ -537,11 +275,19 @@ public final class ModelPreviewRenderer {
             };
         }
 
-        if (scenery != null) {
-            PreviewEntityRegistry.register(state, animatable, scenery, null);
-        } else {
-            PreviewEntityRegistry.register(state, animatable);
+        final float characterYOffset = poseYOffset;
+        PreviewEntityRegistry.ModelPoseTransform characterPose = null;
+        if (wantBed) {
+            // A bed is 9/16 blocks high. Move the sleeper onto its mattress;
+            // the half-block shift uses the same yaw convention as the bed.
+            double angle = Math.toRadians(capturedYaw);
+            double sleeperX = 0.5 * Math.sin(angle);
+            double sleeperZ = 0.5 * Math.cos(angle);
+            characterPose = poseStack -> poseStack.translate(sleeperX, 9.0 / 16.0, sleeperZ);
+        } else if (characterYOffset != 0.0f) {
+            characterPose = poseStack -> poseStack.translate(0.0f, characterYOffset, 0.0f);
         }
+        PreviewEntityRegistry.register(state, animatable, scenery, null, characterPose);
 
         Quaternionf cameraTilt = new Quaternionf().rotateX((float) Math.toRadians(-10.0 + pitch));
         Quaternionf rotation = new Quaternionf().rotateZ((float) Math.PI).mul(cameraTilt);
@@ -551,7 +297,9 @@ public final class ModelPreviewRenderer {
         float rectCenterX = (x0 + x1) / 2.0F;
         float rectCenterY = (y0 + y1) / 2.0F;
         float translationX = (anchorX - rectCenterX) / submitScale;
-        float translationY = (anchorY - rectCenterY) / submitScale + 0.8F + poseYOffset;
+        // GUI translation precedes Rz(pi)*Rx(tilt). Pose offsets instead run
+        // after that rotation, on the character only, via the registry above.
+        float translationY = (anchorY - rectCenterY) / submitScale + 0.8F;
         if (wantBed) {
             state.bodyRot = yaw - 90;
         }
@@ -559,7 +307,7 @@ public final class ModelPreviewRenderer {
         Vector3f translation = new Vector3f(translationX, translationY, 0.0F);
 
         guiGraphics.enableScissor(x0, y0, x1, y1);
-        guiGraphics.submitEntityRenderState(state, submitScale, translation, rotation, cameraTilt, x0, y0, x1, y1);
+        guiGraphics.entity(state, submitScale, translation, rotation, cameraTilt, x0, y0, x1, y1);
         guiGraphics.disableScissor();
 
         if (poseChanged) {
@@ -567,37 +315,72 @@ public final class ModelPreviewRenderer {
         }
     }
 
-    private static void renderGroundScenery(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, float yaw) {
-        net.minecraft.client.renderer.block.BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
+    private static void submitBlockScenery(net.minecraft.world.level.block.state.BlockState block,
+                                           PoseStack poseStack, DeferredBufferSource buffers,
+                                           int light, int overlay) {
+        net.minecraft.client.renderer.block.BlockModelRenderState state = new net.minecraft.client.renderer.block.BlockModelRenderState();
+        RendererManager.getBlockModelResolver().update(state, block,
+                net.minecraft.client.renderer.block.model.BlockDisplayContext.create());
+        state.submit(poseStack, buffers.collector(), light, overlay, 0);
+    }
+
+    public static void submitSettingsPreview(GuiGraphicsExtractor graphics, LivingAnimatable<?> animatable,
+                                            int x0, int y0, int x1, int y1,
+                                            float anchorX, float anchorY, float zoom,
+                                            float pitch, float yaw, float partialTick) {
+        if (!(animatable instanceof CustomPlayerEntity playerModel)) {
+            throw new IllegalArgumentException("Settings preview requires a player model");
+        }
+        Player entity = playerModel.getEntity();
+        if (entity == null) {
+            return;
+        }
+        AvatarRenderState state = new AvatarRenderState();
+        RendererManager.getPlayerRenderer().extractRenderState(entity, state, partialTick);
+        state.lightCoords = net.minecraft.util.LightCoordsUtil.FULL_BRIGHT;
+        state.bodyRot = -yaw;
+        state.yRot = Mth.wrapDegrees(180.0f + yaw);
+        state.xRot = 0;
+        PreviewEntityRegistry.register(state, playerModel);
+        Quaternionf cameraTilt = new Quaternionf().rotateX((float) Math.toRadians(-10.0f + pitch));
+        Quaternionf rotation = new Quaternionf().rotateZ((float) Math.PI).mul(cameraTilt);
+        float submitScale = zoom / entity.getScale();
+        Vector3f translation = new Vector3f((anchorX - (x0 + x1) / 2.0f) / submitScale,
+                (anchorY - (y0 + y1) / 2.0f) / submitScale + 0.8f, 0);
+        graphics.enableScissor(x0, y0, x1, y1);
+        graphics.entity(state, submitScale, translation, rotation, cameraTilt, x0, y0, x1, y1);
+        graphics.disableScissor();
+    }
+
+    private static void renderGroundScenery(PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight, float yaw) {
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
+        poseStack.rotate(Axis.YP.rotationDegrees(yaw));
         poseStack.translate(-1.5d, -1.0d, -2.5d);
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 poseStack.translate(0.0f, 0.0f, 1.0f);
-                blockRenderer.renderSingleBlock(Blocks.GRASS_BLOCK.defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
+                submitBlockScenery(Blocks.GRASS_BLOCK.defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
             }
             poseStack.translate(1.0f, 0.0f, -3.0f);
         }
         poseStack.translate(-1.0f, 1.0f, 1.0f);
-        blockRenderer.renderSingleBlock(Blocks.SHORT_GRASS.defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
+        submitBlockScenery(Blocks.SHORT_GRASS.defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
         poseStack.translate(0.0f, 0.0f, 1.0f);
-        blockRenderer.renderSingleBlock(Blocks.RED_TULIP.defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
+        submitBlockScenery(Blocks.RED_TULIP.defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
         poseStack.popPose();
     }
 
-    private static void renderBedScenery(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, float yaw) {
-        net.minecraft.client.renderer.block.BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
+    private static void renderBedScenery(PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight, float yaw) {
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(yaw + 180.0f));
+        poseStack.rotate(Axis.YP.rotationDegrees(yaw + 180.0f));
         poseStack.translate(-0.5d, 0.0d, 0.5d);
-        blockRenderer.renderSingleBlock(Blocks.RED_BED.defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
+        submitBlockScenery(Blocks.BED.red().defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
         poseStack.popPose();
     }
 
     private static void renderVehicleScenery(
             PoseStack poseStack,
-            MultiBufferSource bufferSource,
+            DeferredBufferSource bufferSource,
             int packedLight,
             float yaw,
             float partialTick,
@@ -609,7 +392,13 @@ public final class ModelPreviewRenderer {
         }
         Entity vehicle;
         try {
-            vehicle = AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(vehicleType), () -> vehicleType.create(rider.level(), EntitySpawnReason.LOAD));
+            vehicle = AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(vehicleType), () -> {
+                Entity preview = vehicleType.create(rider.level(), EntitySpawnReason.LOAD);
+                if (preview != null) {
+                    preview.setId(com.elfmcys.yesstevemodel.util.PreviewEntityIds.next());
+                }
+                return preview;
+            });
         } catch (java.util.concurrent.ExecutionException e) {
             return;
         }
@@ -618,8 +407,13 @@ public final class ModelPreviewRenderer {
         }
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
-        double yOffset = -(vehicle.getPassengerRidingPosition(rider).y - vehicle.getY());
+        poseStack.rotate(Axis.YP.rotationDegrees(yaw));
+        // The vanilla renderer's origin is the vehicle's feet/keel. This scene
+        // has its ground plane at y=0; passenger attachment offsets apply to
+        // the rider, never to the independently displayed vehicle.
+        net.minecraft.client.renderer.entity.state.EntityRenderState state = dispatcher.extractEntity(vehicle, partialTick);
+        state.lightCoords = packedLight;
+        dispatcher.submit(state, RenderContext.camera(), 0, 0, 0, poseStack, bufferSource.collector());
         poseStack.popPose();
     }
 }

@@ -16,7 +16,7 @@ import dev.architectury.event.EventResult;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -33,7 +33,7 @@ public class RenderFirstPlayerBackground {
         currentFrameRendered = false;
     }
 
-    public static void onRenderHand(PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight, float partialTick) {
+    public static void onRenderHand(PoseStack poseStack, DeferredBufferSource multiBufferSource, int packedLight, float partialTick) {
         if (!YesSteveModel.isAvailable()) {
             return;
         }
@@ -82,7 +82,7 @@ public class RenderFirstPlayerBackground {
         float walkPhase = ap.avatarState().getBackwardsInterpolatedWalkDistance(partialTick);
         float fLerp = ap.avatarState().getInterpolatedBob(partialTick);
         poseStack.translate((-Mth.sin(walkPhase * 3.1415927f)) * fLerp * 0.5f, Math.abs(Mth.cos(walkPhase * 3.1415927f) * fLerp), 0.0d);
-        poseStack.mulPose(Axis.ZN.rotationDegrees(Mth.sin(walkPhase * 3.1415927f) * fLerp * 3.0f));
-        poseStack.mulPose(Axis.XN.rotationDegrees(Math.abs(Mth.cos((walkPhase * 3.1415927f) - 0.2f) * fLerp) * 5.0f));
+        poseStack.rotate(Axis.ZN.rotationDegrees(Mth.sin(walkPhase * 3.1415927f) * fLerp * 3.0f));
+        poseStack.rotate(Axis.XN.rotationDegrees(Math.abs(Mth.cos((walkPhase * 3.1415927f) - 0.2f) * fLerp) * 5.0f));
     }
 }

@@ -20,9 +20,9 @@ import rip.ysm.gui.ModernAnimationRouletteScreen;
 
 public final class AnimationRouletteKey {
 
-    public static final KeyMapping KEY_ROULETTE = KeyMappingFactory.createInGameNone("key.yes_steve_model.animation_roulette.desc", InputConstants.Type.KEYSYM, 90, KeyMappingFactory.YSM_CATEGORY);
+    public static final KeyMapping KEY_ROULETTE = KeyMappingFactory.createInGameNone("key.yes_steve_model.animation_roulette.desc", InputConstants.Type.KEYBOARD, InputConstants.KEY_Z, KeyMappingFactory.YSM_CATEGORY);
 
-    public static final KeyMapping KEY_LOCK = KeyMappingFactory.createInGameAlt("key.yes_steve_model.lock_roulette.desc", InputConstants.Type.KEYSYM, 76, KeyMappingFactory.YSM_CATEGORY);
+    public static final KeyMapping KEY_LOCK = KeyMappingFactory.createInGameAlt("key.yes_steve_model.lock_roulette.desc", InputConstants.Type.KEYBOARD, InputConstants.KEY_L, KeyMappingFactory.YSM_CATEGORY);
 
     private AnimationRouletteKey() {
     }
@@ -41,14 +41,14 @@ public final class AnimationRouletteKey {
                             String modelId = cap.getModelId();
                             ModelAssembly modelAssembly = cap.getModelAssembly();
                             if (modelAssembly != null && !modelAssembly.getModelData().getModelProperties().getExtraAnimation().isEmpty()) {
-                                if (Minecraft.getInstance().screen == null) {
+                                if (Minecraft.getInstance().gui.screen() == null) {
                                     if (GeneralConfig.effectiveModernRoulette()) {
-                                        Minecraft.getInstance().setScreen(new ModernAnimationRouletteScreen(modelId, modelAssembly, cap));
+                                        Minecraft.getInstance().gui.setScreen(new ModernAnimationRouletteScreen(modelId, modelAssembly, cap));
                                     } else {
-                                        Minecraft.getInstance().setScreen(new AnimationRouletteScreen(modelId, modelAssembly, cap));
+                                        Minecraft.getInstance().gui.setScreen(new AnimationRouletteScreen(modelId, modelAssembly, cap));
                                     }
-                                } else if (Minecraft.getInstance().screen instanceof AnimationRouletteScreen || Minecraft.getInstance().screen instanceof ModernAnimationRouletteScreen) {
-                                    Minecraft.getInstance().setScreen(null);
+                                } else if (Minecraft.getInstance().gui.screen() instanceof AnimationRouletteScreen || Minecraft.getInstance().gui.screen() instanceof ModernAnimationRouletteScreen) {
+                                    Minecraft.getInstance().gui.setScreen(null);
                                 }
                             }
                         });
