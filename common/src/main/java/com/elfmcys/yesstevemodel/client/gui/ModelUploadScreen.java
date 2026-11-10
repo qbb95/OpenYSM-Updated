@@ -38,7 +38,7 @@ public class ModelUploadScreen extends Screen implements ModelUploadSession.List
     public void init() {
         clearWidgets();
         ModelUploadSession.addListener(this);
-        addRenderableWidget(new FlatColorButton(this.width - 70, 10, 60, 18, Component.literal("Back"), button -> Minecraft.getInstance().gui.setScreen(this.parentScreen)));
+        addRenderableWidget(new FlatColorButton(this.width - 70, 10, 60, 18, Component.literal("Back"), button -> Minecraft.getInstance().setScreen(this.parentScreen)));
     }
 
     @Override
@@ -213,6 +213,6 @@ public class ModelUploadScreen extends Screen implements ModelUploadSession.List
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().gui.setScreen(this.parentScreen);
+        Minecraft.getInstance().setScreen(this.parentScreen);
     }
 }

@@ -30,8 +30,13 @@
   ],
   "depends": {
     "fabricloader": ">=0.20.1",
-    "minecraft": "~26.2",
-    "java": ">=25"
+    "minecraft": "${minecraft_version}",
+    "java": ">=25",
+    "fabric-api": "*",
+    "architectury": "*",
+    "forgeconfigapiport": "*",
+    "cardinal-components-base": ">=8.0.1",
+    "cardinal-components-entity": ">=8.0.1"
   },
   "suggests": {
     "another-mod": "*"

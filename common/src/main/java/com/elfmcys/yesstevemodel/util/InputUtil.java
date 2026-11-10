@@ -12,7 +12,7 @@ public class InputUtil {
 
     public static boolean isPlayerReady() {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.gui.overlay() != null || minecraft.gui.screen() != null || !minecraft.mouseHandler.isMouseGrabbed()) {
+        if (minecraft.getOverlay() != null || minecraft.screen != null || !minecraft.mouseHandler.isMouseGrabbed()) {
             return false;
         }
         return minecraft.isWindowActive();

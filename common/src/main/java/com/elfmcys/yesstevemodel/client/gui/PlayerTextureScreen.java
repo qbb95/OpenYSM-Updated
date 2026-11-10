@@ -145,7 +145,7 @@ public class PlayerTextureScreen extends Screen {
             this.animationCurrentPage = 0;
         }
         addRenderableWidget(new FlatColorButton(this.guiLeft + 5, this.guiTop, 80, 18, Component.translatable("gui.yes_steve_model.model.return"), button -> {
-            Minecraft.getInstance().gui.setScreen(this.parentScreen);
+            Minecraft.getInstance().setScreen(this.parentScreen);
         }));
         addRenderableWidget(new IconButton(this.guiLeft + 281, this.guiTop + 2, 16, 16, 64, 16, button2 -> {
             this.currentAnimation = "idle";

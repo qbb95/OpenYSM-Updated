@@ -24,14 +24,14 @@ public class PauseScreenButtonBuilder {
             Minecraft minecraft = Minecraft.getInstance();
             Button buttonBuild = Button.builder(Component.translatable("gui.yes_steve_model.skin"), button -> {
                 if (GeneralConfig.DISCLAIMER_SHOW.get()) {
-                    minecraft.gui.setScreen(new DisclaimerScreen());
+                    minecraft.setScreen(new DisclaimerScreen());
                 } else {
-                    minecraft.gui.setScreen(new PlayerModelScreen());
+                    minecraft.setScreen(new PlayerModelScreen());
                 }
             }).bounds((pauseScreen.width / 2) - 69, pauseScreen.height - 35, 138, 30).build();
             buttonBuild.setTooltip(Tooltip.create(Component.translatable("key.yes_steve_model.player_model.desc")));
             Button buttonBuild2 = Button.builder(Component.literal("🔧"), button2 -> {
-                minecraft.gui.setScreen(new ExtraPlayerRenderScreen());
+                minecraft.setScreen(new ExtraPlayerRenderScreen());
             }).bounds((pauseScreen.width / 2) - 120, pauseScreen.height - 35, 50, 30).build();
             buttonBuild2.setTooltip(Tooltip.create(Component.translatable("key.yes_steve_model.open_extra_player_render.desc")));
             Button buttonBuild3 = Button.builder(Component.literal("😄"), button3 -> {
@@ -40,7 +40,7 @@ public class PauseScreenButtonBuilder {
                         String str = cap.getModelId();
                         ModelAssembly modelAssembly = cap.getModelAssembly();
                         if (modelAssembly != null && !modelAssembly.getModelData().getModelProperties().getExtraAnimation().isEmpty()) {
-                            minecraft.gui.setScreen(new AnimationRouletteScreen(str, modelAssembly, cap));
+                            minecraft.setScreen(new AnimationRouletteScreen(str, modelAssembly, cap));
                         }
                     });
                 }

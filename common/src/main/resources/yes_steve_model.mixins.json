@@ -20,7 +20,6 @@
     "client.ScreenAccessor",
     "client.ThrowableItemProjectileAccessor",
     "client.WorldRendererMixin",
-    "client.GlBufferAccessor",
     "client.GuiGraphicsExtractorAccessor",
     "client.GuiRenderStateAccessor"
   ],

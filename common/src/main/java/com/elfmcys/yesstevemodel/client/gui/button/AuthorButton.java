@@ -61,7 +61,7 @@ public class AuthorButton extends Button {
         Font font = Minecraft.getInstance().font;
         if (this.authorInfo == null || this.modelAssembly == null || this.Identifier == null) {
             guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -1891417534, -1891417534);
-            guiGraphics.centeredText(font, Component.literal("......"), getX() + (this.width / 2), getY() + (this.height / 2), net.minecraft.network.chat.TextColor.GRAY.getValue() | 0xFF000000);
+            guiGraphics.centeredText(font, Component.literal("......"), getX() + (this.width / 2), getY() + (this.height / 2), net.minecraft.ChatFormatting.GRAY.getColor() | 0xFF000000);
             return;
         }
         if (isHoveredOrFocused()) {
@@ -73,8 +73,8 @@ public class AuthorButton extends Button {
         String str = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, "metadata.authors.%d.name".formatted(this.authorIndex), this.authorInfo.getName());
         String str2 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, "metadata.authors.%d.role".formatted(this.authorIndex), this.authorInfo.getRole());
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, "metadata.authors.%d.comment".formatted(this.authorIndex), this.authorInfo.getComment());
-        guiGraphics.text(font, str, getX() + 2, getY() + 72, net.minecraft.network.chat.TextColor.GOLD.getValue() | 0xFF000000, false);
-        guiGraphics.centeredText(font, str2, getX() + 35, getY() + 82, net.minecraft.network.chat.TextColor.GREEN.getValue() | 0xFF000000);
+        guiGraphics.text(font, str, getX() + 2, getY() + 72, net.minecraft.ChatFormatting.GOLD.getColor() | 0xFF000000, false);
+        guiGraphics.centeredText(font, str2, getX() + 35, getY() + 82, net.minecraft.ChatFormatting.GREEN.getColor() | 0xFF000000);
         drawWrappedText(guiGraphics, Component.literal(str3), getX() + 3, getY() + 95, 64, -1);
     }
 
@@ -149,11 +149,11 @@ public class AuthorButton extends Button {
             return;
         }
         if (link.startsWith("http://") || link.startsWith("https://")) {
-            Minecraft.getInstance().gui.setScreen(new ConfirmLinkScreen(confirmed -> {
+            Minecraft.getInstance().setScreen(new ConfirmLinkScreen(confirmed -> {
                 if (confirmed) {
                     Util.getPlatform().openUri(link);
                 }
-                Minecraft.getInstance().gui.setScreen(this.parentScreen);
+                Minecraft.getInstance().setScreen(this.parentScreen);
             }, link, true));
             return;
         }

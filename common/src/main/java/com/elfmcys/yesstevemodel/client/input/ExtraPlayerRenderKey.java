@@ -24,7 +24,7 @@ public final class ExtraPlayerRenderKey {
         }
         ClientRawInputEvent.KEY_PRESSED.register((client, action, event) -> {
             if (YesSteveModel.isAvailable() && InputUtil.isPlayerReady() && action == 1 && InputUtil.isKeyPressed(event, KEY_MAPPING)) {
-                Minecraft.getInstance().gui.setScreen(new ExtraPlayerRenderScreen());
+                Minecraft.getInstance().setScreen(new ExtraPlayerRenderScreen());
             }
             return EventResult.pass();
         });

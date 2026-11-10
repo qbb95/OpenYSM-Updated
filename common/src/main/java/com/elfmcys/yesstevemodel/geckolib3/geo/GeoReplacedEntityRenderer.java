@@ -223,7 +223,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends Player, T extend
     @Override
     public boolean shouldShowName(TEntity entity, double distance) {
         double d = entity.isDiscrete() ? 32.0d : 64.0d;
-        return distance < d * d && entity == this.entityRenderDispatcher.crosshairPickEntity && entity.hasCustomName() && !Minecraft.getInstance().gui.hud.isHidden();
+        return distance < d * d && entity == this.entityRenderDispatcher.crosshairPickEntity && entity.hasCustomName() && !Minecraft.getInstance().options.hideGui;
     }
 
     public final boolean addLayerRenderer(GeoLayerRenderer<T> layerRenderer) {

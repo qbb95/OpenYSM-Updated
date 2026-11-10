@@ -346,7 +346,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
                 PlayerCapability.get(Minecraft.getInstance().player).ifPresent(cap -> {
                     ModelAssembly modelAssembly = cap.getModelAssembly();
                     if (modelAssembly.getModelData().getExtraInfo() != null) {
-                        Minecraft.getInstance().gui.setScreen(createModelInfoScreen(this, modelAssembly));
+                        Minecraft.getInstance().setScreen(createModelInfoScreen(this, modelAssembly));
                     }
                 });
             }
@@ -354,7 +354,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         addRenderableWidget(new IconButton(this.guiLeft + 28, this.guiTop + 5, 79, 20, 32, 16, button2 -> {
             if (Minecraft.getInstance().player != null) {
                 PlayerCapability.get(Minecraft.getInstance().player).ifPresent(cap -> {
-                    Minecraft.getInstance().gui.setScreen(createTextureScreen(this, cap.getModelId(), cap.getModelAssembly()));
+                    Minecraft.getInstance().setScreen(createTextureScreen(this, cap.getModelId(), cap.getModelAssembly()));
                 });
             }
         }).setTooltipText("gui.yes_steve_model.model.texture"));
@@ -394,17 +394,17 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
             }
         }).setTooltipText("gui.yes_steve_model.star_models"));
         addRenderableWidget(new IconButton(this.guiLeft + 397, this.guiTop + 5, 18, 18, 16, 16, button7 -> {
-            Minecraft.getInstance().gui.setScreen(new ExtraPlayerConfigScreen(this));
+            Minecraft.getInstance().setScreen(new ExtraPlayerConfigScreen(this));
         }).setTooltipText("gui.yes_steve_model.config"));
         boolean canUpload = ClientModelManager.isAllowUpload() && ClientModelManager.isOysmServer();
         IconButton uploadButton = new IconButton(this.guiLeft + 377, this.guiTop + 5, 18, 18, 0, 16, button8 -> {
-            Minecraft.getInstance().gui.setScreen(new ModelUploadScreen(this));
+            Minecraft.getInstance().setScreen(new ModelUploadScreen(this));
         });
         uploadButton.active = canUpload;
         uploadButton.setTooltipLines(java.util.Collections.singletonList(Component.literal(canUpload ? "Upload model to server" : "Server has uploads disabled, or this is not an OpenYSM server")));
         addRenderableWidget(uploadButton);
         addRenderableWidget(new IconButton(this.guiLeft + 357, this.guiTop + 5, 18, 18, 80, 0, button9 -> {
-            Minecraft.getInstance().gui.setScreen(new OpenModelFolderScreen(this));
+            Minecraft.getInstance().setScreen(new OpenModelFolderScreen(this));
         }).setTooltipText("gui.yes_steve_model.open_model_folder.open"));
         addRenderableWidget(new FlatColorButton(this.guiLeft + 198, this.guiTop + 215, 52, 14, Component.translatable("gui.yes_steve_model.pre_page"), button10 -> {
             int currentPage = getCurrentPage();
@@ -474,7 +474,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         String strVersionString = Platform.getMod(YesSteveModel.MOD_ID).getVersion();
         guiGraphics.pose().pushMatrix();
         guiGraphics.pose().translate(0.0f, 0.0f);
-        guiGraphics.text(this.font, strVersionString, this.guiLeft + 2, this.guiTop + 226, net.minecraft.network.chat.TextColor.DARK_GRAY.getValue() | 0xFF000000);
+        guiGraphics.text(this.font, strVersionString, this.guiLeft + 2, this.guiTop + 226, net.minecraft.ChatFormatting.DARK_GRAY.getColor() | 0xFF000000);
         guiGraphics.pose().popMatrix();
         if (StringUtils.isNotBlank(currentPath)) {
             int lineIndex = 0;
@@ -540,7 +540,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         int iWidth = (this.guiLeft + 414) - this.font.width(mutableComponentLiteral);
         int i = this.guiTop + 215;
         Objects.requireNonNull(this.font);
-        guiGraphics.text(this.font, mutableComponentLiteral, iWidth, i + Math.round((14 - 9) / 2.0f), net.minecraft.network.chat.TextColor.DARK_GRAY.getValue() | 0xFF000000);
+        guiGraphics.text(this.font, mutableComponentLiteral, iWidth, i + Math.round((14 - 9) / 2.0f), net.minecraft.ChatFormatting.DARK_GRAY.getColor() | 0xFF000000);
     }
 
     public void renderModelPreview(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {

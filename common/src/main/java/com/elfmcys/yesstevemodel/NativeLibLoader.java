@@ -54,15 +54,12 @@ public final class NativeLibLoader {
     }
 
     public static void init() throws IOException {
-        String path = System.getenv("YSM_CORE_LIB");
-        if (StringUtil.isNullOrEmpty(path)) {
-            path = extractAndGetLibPath();
-        }
-
-        if (path != null && loadNativeLib(path)) {
-            loaded = true;
-        }
+        // This port uses the Java model parser and vanilla submit collectors.
+        // Do not build unused native mesh caches or load the legacy binaries:
+        // the supported backend must work without a launcher-specific VM flag.
+        loaded = false;
         available = true;
+        YesSteveModel.LOGGER.info("Using Java model backend; legacy native acceleration is disabled");
     }
 
     private static @Nullable String extractAndGetLibPath() throws IOException {

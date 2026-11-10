@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelRenderer.class)
 public class WorldRendererMixin {
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "renderLevel", at = @At("HEAD"))
     private void ysm$beginLevelRender(CallbackInfo ci) {
         if (YesSteveModel.isAvailable()) {
             ModelPreviewRenderer.setFirstPersonMode(true);
@@ -20,7 +20,7 @@ public class WorldRendererMixin {
         }
     }
 
-    @Inject(method = "render", at = @At("RETURN"))
+    @Inject(method = "renderLevel", at = @At("RETURN"))
     private void ysm$endLevelRender(CallbackInfo ci) {
         if (YesSteveModel.isAvailable()) {
             EntityRenderCache.clear();

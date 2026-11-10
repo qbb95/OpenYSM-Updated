@@ -1,5 +1,8 @@
 # Experimental Fabric 26.2 port — alpha.3
 
+Historical 26.2 checkpoint: `6375ea8`. This branch now targets 26.1.x; see
+[PORT-26.1.md](PORT-26.1.md). Check out that commit to reproduce the 26.2 build.
+
 Local port of snapshot `bcfa3c355e6252618e68d7c61ef8ff03455ab64c` from
 `qbb95/OpenYSM-Updated`. Fabric only; Java 25, Minecraft 26.2, Fabric Loader 0.20.1.
 Build with `./gradlew :fabric:build`. The production artifact is

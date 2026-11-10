@@ -411,7 +411,7 @@ public class AnimationRouletteScreen extends Screen {
 
     private void renderPageInfo(GuiGraphicsExtractor guiGraphics) {
         guiGraphics.fill(this.centerX + 157, this.centerY - 87, this.centerX + 238, this.centerY - 72, -822083584);
-        guiGraphics.centeredText(this.font, String.format("%d/%d", Integer.valueOf(this.currentNavEntry.getRight().intValue() + 1), Integer.valueOf(((this.currentProperties.size() - 1) / 8) + 1)), this.centerX + 197, this.centerY - 83, net.minecraft.network.chat.TextColor.AQUA.getValue() | 0xFF000000);
+        guiGraphics.centeredText(this.font, String.format("%d/%d", Integer.valueOf(this.currentNavEntry.getRight().intValue() + 1), Integer.valueOf(((this.currentProperties.size() - 1) / 8) + 1)), this.centerX + 197, this.centerY - 83, net.minecraft.ChatFormatting.AQUA.getColor() | 0xFF000000);
     }
 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double delta) {
@@ -473,7 +473,7 @@ public class AnimationRouletteScreen extends Screen {
                     if (GeneralConfig.ROULETTE_SETTINGS_MODE.get() == GeneralConfig.RouletteSettingsMode.CLASSIC) {
                         showConfigGroup(strSubstring);
                     } else {
-                        Minecraft.getInstance().gui.setScreen(new rip.ysm.gui.ModelSettingsScreen(this.renderContext, this.animatableModel, this, strSubstring));
+                        Minecraft.getInstance().setScreen(new rip.ysm.gui.ModelSettingsScreen(this.renderContext, this.animatableModel, this, strSubstring));
                     }
                 }
             }
@@ -532,7 +532,7 @@ public class AnimationRouletteScreen extends Screen {
         if (localPlayer != null && GeneralConfig.PRINT_ANIMATION_ROULETTE_MSG.get().booleanValue()) {
             localPlayer.sendSystemMessage(Component.translatable("message.yes_steve_model.model.animation_roulette.play", str));
         }
-        Minecraft.getInstance().gui.setScreen(null);
+        Minecraft.getInstance().setScreen(null);
     }
 
     private void navigateToSubmenu(String str) {
@@ -547,17 +547,17 @@ public class AnimationRouletteScreen extends Screen {
         String strSubstring = str.substring(SUBMENU_PREFIX.length());
         if (this.textProperties.get(strSubstring) != null) {
             navigationStack.addLast(MutablePair.of(strSubstring, 0));
-            Minecraft.getInstance().gui.setScreen(new AnimationRouletteScreen(this.renderGroups, this.textProperties, this.renderContext, this.animatableModel));
+            Minecraft.getInstance().setScreen(new AnimationRouletteScreen(this.renderGroups, this.textProperties, this.renderContext, this.animatableModel));
         }
     }
 
     private void navigateBack() {
         if (navigationStack.size() > 1) {
             navigationStack.removeLast();
-            Minecraft.getInstance().gui.setScreen(new AnimationRouletteScreen(this.renderGroups, this.textProperties, this.renderContext, this.animatableModel));
+            Minecraft.getInstance().setScreen(new AnimationRouletteScreen(this.renderGroups, this.textProperties, this.renderContext, this.animatableModel));
             return;
         }
-        Minecraft.getInstance().gui.setScreen(null);
+        Minecraft.getInstance().setScreen(null);
     }
 
     public static void setInitialSubmenu(String str) {

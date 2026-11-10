@@ -260,11 +260,11 @@ public final class ModelPreviewRenderer {
         if (wantGround || wantBed || wantHorse || wantPig || wantBoat) {
             scenery = (poseStack, bufferSource, packedLight) -> {
                 if (wantHorse) {
-                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityTypes.HORSE);
+                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityType.HORSE);
                 } else if (wantPig) {
-                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityTypes.PIG);
+                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityType.PIG);
                 } else if (wantBoat) {
-                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityTypes.OAK_BOAT);
+                    renderVehicleScenery(poseStack, bufferSource, packedLight, capturedYaw, partialTick, entity, EntityType.OAK_BOAT);
                 }
                 if (wantBed) {
                     renderBedScenery(poseStack, bufferSource, packedLight, capturedYaw);
@@ -374,7 +374,7 @@ public final class ModelPreviewRenderer {
         poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(yaw + 180.0f));
         poseStack.translate(-0.5d, 0.0d, 0.5d);
-        submitBlockScenery(Blocks.BED.red().defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
+        submitBlockScenery(Blocks.RED_BED.defaultBlockState(), poseStack, bufferSource, packedLight, OverlayTexture.NO_OVERLAY);
         poseStack.popPose();
     }
 

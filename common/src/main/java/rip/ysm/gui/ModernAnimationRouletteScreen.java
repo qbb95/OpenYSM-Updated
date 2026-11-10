@@ -351,7 +351,7 @@ public class ModernAnimationRouletteScreen extends Screen {
             if (value.startsWith("#")) {
                 String sub = value.substring(1);
                 if (renderGroups.containsKey(sub)) {
-                    Minecraft.getInstance().gui.setScreen(new ModelSettingsScreen(renderContext, animatableModel, this, sub));
+                    Minecraft.getInstance().setScreen(new ModelSettingsScreen(renderContext, animatableModel, this, sub));
                     return true;
                 }
             }
@@ -380,7 +380,7 @@ public class ModernAnimationRouletteScreen extends Screen {
 
     private void navigateTo(int targetIndex) {
         while (navigationStack.size() > targetIndex + 1) navigationStack.removeLast();
-        Minecraft.getInstance().gui.setScreen(new ModernAnimationRouletteScreen(lastModelId, renderContext, animatableModel));
+        Minecraft.getInstance().setScreen(new ModernAnimationRouletteScreen(lastModelId, renderContext, animatableModel));
     }
 
     @Override
@@ -415,17 +415,17 @@ public class ModernAnimationRouletteScreen extends Screen {
         String sub = value.substring(1);
         if (textProperties.get(sub) != null) {
             navigationStack.addLast(MutablePair.of(sub, 0));
-            Minecraft.getInstance().gui.setScreen(new ModernAnimationRouletteScreen(lastModelId, renderContext, animatableModel));
+            Minecraft.getInstance().setScreen(new ModernAnimationRouletteScreen(lastModelId, renderContext, animatableModel));
         }
     }
 
     private void navigateBack() {
         if (navigationStack.size() > 1) {
             navigationStack.removeLast();
-            Minecraft.getInstance().gui.setScreen(new ModernAnimationRouletteScreen(lastModelId, renderContext, animatableModel));
+            Minecraft.getInstance().setScreen(new ModernAnimationRouletteScreen(lastModelId, renderContext, animatableModel));
             return;
         }
-        Minecraft.getInstance().gui.setScreen(null);
+        Minecraft.getInstance().setScreen(null);
     }
 
     private void playAnimation(String key) {
@@ -442,7 +442,7 @@ public class ModernAnimationRouletteScreen extends Screen {
         if (player != null && GeneralConfig.PRINT_ANIMATION_ROULETTE_MSG.get()) {
             player.sendSystemMessage(Component.translatable("message.yes_steve_model.model.animation_roulette.play", key));
         }
-        Minecraft.getInstance().gui.setScreen(null);
+        Minecraft.getInstance().setScreen(null);
     }
 
     private void playClick() {

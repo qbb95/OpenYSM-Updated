@@ -108,6 +108,11 @@ public class RenderSmoke {
   require(RenderContext.collector()==outer.proxy && RenderContext.bufferSource()==saved,"collector failure broke outer scope");
   RenderContext.exit();require(RenderContext.collector()==null,"scope leaked after collector error");
   checks.put("collector_failure_restores_parent_scope",true);
-  System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(Map.of("status","PASS","real_minecraft","26.2","real_render_types",true,"checks",checks,"limits",List.of("Collector and output VertexConsumer are test doubles; no GPU upload or in-game display is exercised."))));
+  String minecraftVersion;
+  try(var stream=net.minecraft.SharedConstants.class.getResourceAsStream("/version.json")) {
+   if(stream==null)throw new AssertionError("Minecraft version metadata missing from verification classpath");
+   minecraftVersion=com.google.gson.JsonParser.parseReader(new java.io.InputStreamReader(stream,java.nio.charset.StandardCharsets.UTF_8)).getAsJsonObject().get("id").getAsString();
+  }
+  System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(Map.of("status","PASS","real_minecraft",minecraftVersion,"real_render_types",true,"checks",checks,"limits",List.of("Collector and output VertexConsumer are test doubles; no GPU upload or in-game display is exercised."))));
  }
 }

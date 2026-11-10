@@ -255,12 +255,12 @@ public abstract class OptionScreen extends Screen {
 
     protected void onSave() {
         onApply();
-        Minecraft.getInstance().gui.setScreen(parentScreen);
+        Minecraft.getInstance().setScreen(parentScreen);
     }
 
     protected void onCancel() {
         for (OptionGroup g : groups) g.undo();
-        Minecraft.getInstance().gui.setScreen(parentScreen);
+        Minecraft.getInstance().setScreen(parentScreen);
     }
 
     protected void onUndo() {

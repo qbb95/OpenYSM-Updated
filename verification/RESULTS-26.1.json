@@ -1,0 +1,360 @@
+{
+  "status": "PASS",
+  "build": "unofficial alpha.1",
+  "base_repository": "qbb95/OpenYSM-Updated",
+  "base_commit": "bcfa3c355e6252618e68d7c61ef8ff03455ab64c",
+  "environment": {
+    "os": "Windows",
+    "java": "25.0.5+8",
+    "fabric_loader": "0.20.1",
+    "graphics": "OpenGL / NVIDIA RTX 5090",
+    "client_heap_gib": 8,
+    "server_heap_gib": 4,
+    "network": "Independent dedicated server and two clients on loopback; offline test identities"
+  },
+  "catalog": {
+    "original_revision": "1749b46467acea11694891c01ede24914b22dc6c",
+    "original_files": 1114,
+    "ysm_files": 906,
+    "zip_models": 208,
+    "advertised_entries": 1146,
+    "unique_downloaded_contents": 1116,
+    "custom_client_models_preinstalled": 0
+  },
+  "versions": {
+    "26.1": {
+      "artifact": "YesSteveModel-26.1-Fabric-unofficial-alpha.1.jar",
+      "sha256": "c23918c936a594ab2a6ad5f4bac30b1375afae0d301a0a8878ac55f43dc6feaa",
+      "same_binary_on_server_and_both_clients": true,
+      "clean_shutdown": true,
+      "cold_full_catalog_seconds": {
+        "PortAlice": 28,
+        "PortBob": 28
+      },
+      "mixed_reconnect_full_catalog_seconds": {
+        "PortAlice": 41,
+        "PortBob": 24
+      },
+      "mixed_reconnect_ready_ms": {
+        "PortAlice": {
+          "Overdose_Ame-chan.ysm": 1247,
+          "Overdose_Kangel.ysm": 1248
+        },
+        "PortBob": {
+          "Overdose_Ame-chan.ysm": 292,
+          "Overdose_Kangel.ysm": 292
+        }
+      },
+      "remote_animation_traces": {
+        "PortAlice": {
+          "remote_target": "PortBob",
+          "states": [
+            "extra0",
+            "extra1",
+            "extra2",
+            "extra3",
+            "extra4",
+            "extra5",
+            "extra6",
+            "extra7",
+            "hold_mainhand:empty",
+            "hold_offhand:empty",
+            "idle",
+            "jump",
+            "parallel0",
+            "parallel1",
+            "parallel3",
+            "pre_parallel0",
+            "pre_parallel1",
+            "pre_parallel2",
+            "run",
+            "sneak",
+            "sneaking",
+            "swing_hand",
+            "walk"
+          ],
+          "forearm_x_range_radians": [
+            0.0,
+            2.0301147
+          ]
+        },
+        "PortBob": {
+          "remote_target": "PortAlice",
+          "states": [
+            "extra0",
+            "extra1",
+            "extra2",
+            "extra3",
+            "extra4",
+            "extra5",
+            "extra6",
+            "extra7",
+            "hold_mainhand:bow",
+            "hold_mainhand:empty",
+            "hold_offhand:empty",
+            "hold_offhand:shield",
+            "idle",
+            "jump",
+            "parallel0",
+            "parallel1",
+            "parallel3",
+            "pre_parallel0",
+            "pre_parallel1",
+            "pre_parallel2",
+            "run",
+            "sneak",
+            "sneaking",
+            "swing_hand",
+            "use_mainhand:bow",
+            "use_offhand:shield",
+            "walk"
+          ],
+          "forearm_x_range_radians": [
+            0.0,
+            2.0301342
+          ]
+        }
+      },
+      "cache_files_and_bytes": {
+        "PortAlice": {
+          "files": 1116,
+          "bytes": 897622270
+        },
+        "PortBob": {
+          "files": 1116,
+          "bytes": 897622270
+        }
+      },
+      "server_reload_lines": [
+        "[07:11:16] [Server thread/INFO]: [Not Secure] [Server] RELOAD_RESPONSIVENESS_26_1",
+        "[07:11:16] [Server thread/INFO]: §6§l【§aYSM§6§l】§eThere is one another reloading task in progress.",
+        "[07:11:18] [Server thread/INFO]: §6§l【§aYSM§6§l】§eAll models have been reloaded, use time: 1133.044ms"
+      ]
+    },
+    "26.1.1": {
+      "artifact": "YesSteveModel-26.1.1-Fabric-unofficial-alpha.1.jar",
+      "sha256": "7b5c37726e8e2fbe73684f962c333f724ae125964dde895c0572d7d528ecc72b",
+      "same_binary_on_server_and_both_clients": true,
+      "clean_shutdown": true,
+      "cold_full_catalog_seconds": {
+        "PortAlice": 28,
+        "PortBob": 28
+      },
+      "mixed_reconnect_full_catalog_seconds": {
+        "PortAlice": 41,
+        "PortBob": 24
+      },
+      "mixed_reconnect_ready_ms": {
+        "PortAlice": {
+          "Overdose_Ame-chan.ysm": 1032,
+          "Overdose_Kangel.ysm": 1150
+        },
+        "PortBob": {
+          "Overdose_Ame-chan.ysm": 308,
+          "Overdose_Kangel.ysm": 309
+        }
+      },
+      "remote_animation_traces": {
+        "PortAlice": {
+          "remote_target": "PortBob",
+          "states": [
+            "extra0",
+            "extra1",
+            "extra2",
+            "extra3",
+            "extra4",
+            "extra5",
+            "extra6",
+            "extra7",
+            "hold_mainhand:empty",
+            "hold_offhand:empty",
+            "idle",
+            "jump",
+            "parallel0",
+            "parallel1",
+            "parallel3",
+            "pre_parallel0",
+            "pre_parallel1",
+            "pre_parallel2",
+            "run",
+            "sneak",
+            "sneaking",
+            "swing_hand",
+            "walk"
+          ],
+          "forearm_x_range_radians": [
+            0.0,
+            2.0301147
+          ]
+        },
+        "PortBob": {
+          "remote_target": "PortAlice",
+          "states": [
+            "extra0",
+            "extra1",
+            "extra2",
+            "extra3",
+            "extra4",
+            "extra5",
+            "extra6",
+            "extra7",
+            "hold_mainhand:bow",
+            "hold_mainhand:empty",
+            "hold_offhand:empty",
+            "hold_offhand:shield",
+            "idle",
+            "jump",
+            "parallel0",
+            "parallel1",
+            "parallel3",
+            "pre_parallel0",
+            "pre_parallel1",
+            "pre_parallel2",
+            "run",
+            "sneak",
+            "sneaking",
+            "swing_hand",
+            "use_mainhand:bow",
+            "use_offhand:shield",
+            "walk"
+          ],
+          "forearm_x_range_radians": [
+            0.0,
+            2.0301147
+          ]
+        }
+      },
+      "cache_files_and_bytes": {
+        "PortAlice": {
+          "files": 1116,
+          "bytes": 897622270
+        },
+        "PortBob": {
+          "files": 1116,
+          "bytes": 897622270
+        }
+      },
+      "server_reload_lines": [
+        "[07:05:33] [Server thread/INFO]: [Not Secure] [Server] RELOAD_RESPONSIVENESS_26.1.1",
+        "[07:05:33] [Server thread/INFO]: §6§l【§aYSM§6§l】§eThere is one another reloading task in progress.",
+        "[07:05:35] [Server thread/INFO]: §6§l【§aYSM§6§l】§eAll models have been reloaded, use time: 1337.097ms"
+      ]
+    },
+    "26.1.2": {
+      "artifact": "YesSteveModel-26.1.2-Fabric-unofficial-alpha.1.jar",
+      "sha256": "837b8d68256aa9bc6bdfc521482a9808cacd0264fa163cfb107b3e955be1beae",
+      "same_binary_on_server_and_both_clients": true,
+      "clean_shutdown": true,
+      "cold_full_catalog_seconds": {
+        "PortAlice": 27,
+        "PortBob": 27
+      },
+      "mixed_reconnect_full_catalog_seconds": {
+        "PortAlice": 40,
+        "PortBob": 23
+      },
+      "mixed_reconnect_ready_ms": {
+        "PortAlice": {
+          "Overdose_Ame-chan.ysm": 881,
+          "Overdose_Kangel.ysm": 2433
+        },
+        "PortBob": {
+          "Overdose_Ame-chan.ysm": 218,
+          "Overdose_Kangel.ysm": 276
+        }
+      },
+      "remote_animation_traces": {
+        "PortAlice": {
+          "remote_target": "PortBob",
+          "states": [
+            "extra0",
+            "extra1",
+            "extra2",
+            "extra3",
+            "extra4",
+            "extra5",
+            "extra6",
+            "extra7",
+            "hold_mainhand:empty",
+            "hold_offhand:empty",
+            "idle",
+            "jump",
+            "parallel0",
+            "parallel1",
+            "parallel3",
+            "pre_parallel0",
+            "pre_parallel1",
+            "pre_parallel2",
+            "run",
+            "sneak",
+            "sneaking",
+            "swing_hand",
+            "walk"
+          ],
+          "forearm_x_range_radians": [
+            0.0,
+            2.0301147
+          ]
+        },
+        "PortBob": {
+          "remote_target": "PortAlice",
+          "states": [
+            "extra0",
+            "extra1",
+            "extra2",
+            "extra3",
+            "extra4",
+            "extra5",
+            "extra6",
+            "extra7",
+            "hold_mainhand:bow",
+            "hold_mainhand:empty",
+            "hold_offhand:empty",
+            "hold_offhand:shield",
+            "idle",
+            "jump",
+            "parallel0",
+            "parallel1",
+            "parallel3",
+            "pre_parallel0",
+            "pre_parallel1",
+            "pre_parallel2",
+            "run",
+            "sneak",
+            "sneaking",
+            "swing_hand",
+            "use_mainhand:bow",
+            "use_offhand:shield",
+            "walk"
+          ],
+          "forearm_x_range_radians": [
+            0.0,
+            2.0301147
+          ]
+        }
+      },
+      "cache_files_and_bytes": {
+        "PortAlice": {
+          "files": 1116,
+          "bytes": 897622270
+        },
+        "PortBob": {
+          "files": 1116,
+          "bytes": 897622270
+        }
+      },
+      "server_reload_lines": [
+        "[07:08:15] [Server thread/INFO]: [Not Secure] [Server] RELOAD_RESPONSIVENESS_26.1.2",
+        "[07:08:15] [Server thread/INFO]: §6§l【§aYSM§6§l】§eThere is one another reloading task in progress.",
+        "[07:08:16] [Server thread/INFO]: §6§l【§aYSM§6§l】§eAll models have been reloaded, use time: 1348.663ms"
+      ]
+    }
+  },
+  "method": "Test-only module observes registry/controller/bone state and drives actual Minecraft input and network paths. Not included in distributed mod JARs.",
+  "limits": [
+    "Avatar timings begin at model sync, not game-process startup. Server binary/filesystem caches were warm.",
+    "Full-catalog durations have second-resolution timestamps; avatar readiness uses millisecond probes.",
+    "Not every catalog model/animation visually inspected; Linux, public authenticated hosting, proxies, shaders and third-party gameplay mod combinations unverified.",
+    "Native acceleration disabled; complete catalog remains resident after loading."
+  ]
+}

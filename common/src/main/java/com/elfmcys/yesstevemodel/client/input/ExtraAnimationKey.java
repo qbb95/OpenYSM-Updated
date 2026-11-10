@@ -76,7 +76,7 @@ public final class ExtraAnimationKey {
                         }
                         if (rouletteKey.startsWith("#") && modelProperties.getExtraAnimationClassify().containsKey(rouletteKey.substring(1))) {
                             AnimationRouletteScreen.setInitialSubmenu(rouletteKey.substring(1));
-                            Minecraft.getInstance().gui.setScreen(new AnimationRouletteScreen(modelProperties.getExtraAnimationButtons(), modelProperties.getExtraAnimationClassify(), modelAssembly, cap));
+                            Minecraft.getInstance().setScreen(new AnimationRouletteScreen(modelProperties.getExtraAnimationButtons(), modelProperties.getExtraAnimationClassify(), modelAssembly, cap));
                             return;
                         }
                         NetworkHandler.sendToServer(new C2SPlayAnimationPacket(index, StringPool.EMPTY));

@@ -84,7 +84,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
                 }
             }
         }
-        return !Minecraft.getInstance().gui.hud.isHidden() && entity != minecraft.getCameraEntity() && isVisible && !entity.isVehicle();
+        return !Minecraft.getInstance().options.hideGui && entity != minecraft.getCameraEntity() && isVisible && !entity.isVehicle();
     }
 
     @Override

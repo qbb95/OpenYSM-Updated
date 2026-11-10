@@ -119,17 +119,17 @@ public class ModelInfoScreen extends Screen {
             linkY += 25;
         }
         addRenderableWidget(new FlatColorButton(this.guiLeft + 310, linkY, 85, 20, Component.translatable("gui.yes_steve_model.model.return"), button4 -> {
-            Minecraft.getInstance().gui.setScreen(this.parentScreen);
+            Minecraft.getInstance().setScreen(this.parentScreen);
         }));
     }
 
     private void openUrl(@Nullable String str) {
         if (str != null && StringUtils.isNoneBlank(str)) {
-            Minecraft.getInstance().gui.setScreen(new ConfirmLinkScreen(confirmed -> {
+            Minecraft.getInstance().setScreen(new ConfirmLinkScreen(confirmed -> {
                 if (confirmed) {
                     Util.getPlatform().openUri(str);
                 }
-                Minecraft.getInstance().gui.setScreen(this);
+                Minecraft.getInstance().setScreen(this);
             }, str, true));
         }
     }
