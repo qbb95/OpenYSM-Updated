@@ -8,7 +8,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.animal.parrot.ParrotModel;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ParrotRenderer;
 import net.minecraft.client.renderer.entity.state.ParrotRenderState;
@@ -34,7 +34,7 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
     }
 
     @Override
-    public void render(AvatarRenderState state, PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+    public void render(AvatarRenderState state, PoseStack poseStack, DeferredBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         Player player = entityLivingBaseIn.getEntity();
         AnimatedGeoModel model = entityLivingBaseIn.getCurrentModel();
         if (model == null) {
@@ -48,7 +48,7 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
         }
     }
 
-    private void renderParrot(PoseStack poseStack, AvatarRenderState state, MultiBufferSource bufferSource, AnimatedGeoModel model, int packedLightIn, Player player, float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, boolean isLeftShoulder) {
+    private void renderParrot(PoseStack poseStack, AvatarRenderState state, DeferredBufferSource bufferSource, AnimatedGeoModel model, int packedLightIn, Player player, float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, boolean isLeftShoulder) {
         Parrot.Variant variant = isLeftShoulder ? state.parrotOnLeftShoulder : state.parrotOnRightShoulder;
 
         if (variant == null)
@@ -63,7 +63,7 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
 
     private void renderOnShoulder(
             PoseStack poseStack,
-            MultiBufferSource bufferSource,
+            DeferredBufferSource bufferSource,
             int packedLight,
             AvatarRenderState state,
             Parrot.Variant variant,
@@ -80,7 +80,7 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
         this.parrotState.xRot = pitch;
         this.parrotModel.setupAnim(this.parrotState);
         this.parrotModel
-                .renderToBuffer(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(variant))), packedLight, OverlayTexture.NO_OVERLAY);
+                .renderToBuffer(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(variant))), packedLight, OverlayTexture.NO_OVERLAY, -1);
         poseStack.popPose();
     }
 

@@ -10,7 +10,7 @@ import com.elfmcys.yesstevemodel.geckolib3.util.IRenderCycle;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -31,7 +31,7 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
 
     private IRenderCycle renderState;
 
-    public MultiBufferSource bufferSource;
+    public DeferredBufferSource bufferSource;
 
     public AbstractProjectileRenderer(EntityRendererProvider.Context context) {
         super(context);
@@ -41,7 +41,7 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
         this.bufferSource = null;
     }
 
-    public void render(T animatable, S state, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    public void render(T animatable, S state, float partialTick, PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight) {
         AnimationEvent<?> event = animatable.processAnimation(partialTick);
         Minecraft minecraft = Minecraft.getInstance();
         if (event != null && minecraft.player != null) {
@@ -75,7 +75,7 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
     }
 
     @Override
-    public void renderEarly(T animatable, PoseStack poseStack, float partialTick, MultiBufferSource bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
+    public void renderEarly(T animatable, PoseStack poseStack, float partialTick, DeferredBufferSource bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
         this.projectionMatrix = new Matrix4f(poseStack.last().pose());
         IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
     }
@@ -96,12 +96,12 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
     }
 
     @Override
-    public void setCurrentRTB(MultiBufferSource bufferSource) {
+    public void setCurrentRTB(DeferredBufferSource bufferSource) {
         this.bufferSource = bufferSource;
     }
 
     @Override
-    public MultiBufferSource getCurrentRTB() {
+    public DeferredBufferSource getCurrentRTB() {
         return this.bufferSource;
     }
 }

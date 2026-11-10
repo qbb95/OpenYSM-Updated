@@ -7,7 +7,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.renderer.MultiBufferSource;
+import rip.ysm.render.DeferredBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -20,7 +20,7 @@ import rip.ysm.api.item.ToolActionBridge;
 import org.spongepowered.asm.mixin.Unique;
 
 public class CustomFishingHookRenderer {
-    public static boolean tryRenderCustomHook(FishingHook fishingHook, EntityRenderState state, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    public static boolean tryRenderCustomHook(FishingHook fishingHook, EntityRenderState state, float partialTick, PoseStack poseStack, DeferredBufferSource bufferSource, int packedLight) {
         return ProjectileCapability.get(fishingHook).map(cap -> {
             if (cap.isModelInitialized() && cap.isModelReady()) {
                 fishingHook.setXRot(0.0f);
@@ -38,7 +38,7 @@ public class CustomFishingHookRenderer {
         }).orElse(true);
     }
 
-    private static void renderFishingLine(FishingHook fishingHook, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, Player player) {
+    private static void renderFishingLine(FishingHook fishingHook, float partialTick, PoseStack poseStack, DeferredBufferSource bufferSource, Player player) {
         int hand = player.getMainArm() == HumanoidArm.RIGHT ? 1 : -1;
         if (!ToolActionBridge.canFishingRodCast(player.getMainHandItem())) {
             hand = -hand;
@@ -60,7 +60,7 @@ public class CustomFishingHookRenderer {
             anglerZ = (Mth.lerp(partialTick, player.zo, player.getZ()) - (dSin * handOffset)) + (dCos * 0.8d);
             anglerEye = player.isCrouching() ? -0.1875f : 0.0f;
         } else {
-            Vec3 vec3XRot = entityRenderDispatcher.camera.getNearPlane().getPointOnPlane(hand * 0.525f, -0.1f).scale(960.0d / options.fov().get().intValue()).yRot(swingProgressSqrt * 0.5f).xRot((-swingProgressSqrt) * 0.7f);
+            Vec3 vec3XRot = entityRenderDispatcher.camera.getNearPlane(options.fov().get().floatValue()).getPointOnPlane(hand * 0.525f, -0.1f).scale(960.0d / options.fov().get().intValue()).yRot(swingProgressSqrt * 0.5f).xRot((-swingProgressSqrt) * 0.7f);
             anglerX = Mth.lerp(partialTick, player.xo, player.getX()) + vec3XRot.x;
             anglerY = Mth.lerp(partialTick, player.yo, player.getY()) + vec3XRot.y;
             anglerZ = Mth.lerp(partialTick, player.zo, player.getZ()) + vec3XRot.z;

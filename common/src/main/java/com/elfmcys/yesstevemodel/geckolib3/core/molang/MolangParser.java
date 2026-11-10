@@ -110,7 +110,7 @@ public class MolangParser {
     }
 
     public IValue toFloatValue(double d) {
-        return new FloatValue((float) d);
+        return FloatValue.of((float) d);
     }
 
     public void reset() {

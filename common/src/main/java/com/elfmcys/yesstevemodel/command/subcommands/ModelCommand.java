@@ -115,7 +115,7 @@ public class ModelCommand {
     private static int reloadAllPack(CommandContext<CommandSourceStack> context) {
         context.getSource().sendSuccess(() -> Component.translatable("message.yes_steve_model.model.reload.start"), true);
         StopWatch watch = StopWatch.createStarted();
-        if (!ServerModelManager.loadModels(result -> {
+        if (!ServerModelManager.reloadModelsAsync(result -> {
             if (result.getErrorMessage() != null) {
                 YSMMessageFormatter.sendServerMessage(context.getSource(), YSMMessageFormatter.withPrefix(result.getErrorMessage()), true);
             }

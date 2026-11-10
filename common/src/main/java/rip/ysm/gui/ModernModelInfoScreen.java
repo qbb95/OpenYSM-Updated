@@ -117,7 +117,7 @@ public class ModernModelInfoScreen extends OptionScreen {
 
     @Override
     public void onClose() {
-        if (this.minecraft != null) this.minecraft.setScreen(parentScreen);
+        if (this.minecraft != null) this.minecraft.gui.setScreen(parentScreen);
     }
 
     @Override
@@ -140,14 +140,14 @@ public class ModernModelInfoScreen extends OptionScreen {
 
     public void openUrlWithConfirm(String url) {
         if (StringUtils.isBlank(url)) return;
-        Minecraft.getInstance().setScreen(new ConfirmLinkScreen(confirmed -> {
+        Minecraft.getInstance().gui.setScreen(new ConfirmLinkScreen(confirmed -> {
             if (confirmed) {
                 try {
                     Util.getPlatform().openUri(new URI(url));
                 } catch (Exception ignored) {
                 }
             }
-            Minecraft.getInstance().setScreen(this);
+            Minecraft.getInstance().gui.setScreen(this);
         }, url, true));
     }
 }

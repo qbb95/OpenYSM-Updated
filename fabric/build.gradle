@@ -25,33 +25,35 @@ configurations {
 }
 
 dependencies {
-    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    implementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
 
-    modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
+    implementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
     include "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
 
-    modImplementation("dev.architectury:architectury-fabric:$rootProject.architectury_api_version") {
+    implementation("dev.architectury:architectury-fabric:$rootProject.architectury_api_version") {
         exclude group: "net.fabricmc.fabric-api", module: "fabric-api"
     }
     include "dev.architectury:architectury-fabric:$rootProject.architectury_api_version"
 
-    modImplementation "maven.modrinth:forge-config-api-port:$rootProject.forge_config_api_port_version"
+    implementation "maven.modrinth:forge-config-api-port:$rootProject.forge_config_api_port_version"
     include "maven.modrinth:forge-config-api-port:$rootProject.forge_config_api_port_version"
     implementation "com.electronwill.night-config:core:3.8.1"
     implementation "com.electronwill.night-config:toml:3.8.1"
 
-    modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-base:$rootProject.cardinal_components_version"
-    modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-entity:$rootProject.cardinal_components_version"
+    implementation "org.ladysnake.cardinal-components-api:cardinal-components-base:$rootProject.cardinal_components_version"
+    implementation "org.ladysnake.cardinal-components-api:cardinal-components-entity:$rootProject.cardinal_components_version"
     include "org.ladysnake.cardinal-components-api:cardinal-components-base:$rootProject.cardinal_components_version"
     include "org.ladysnake.cardinal-components-api:cardinal-components-entity:$rootProject.cardinal_components_version"
 
-    implementation "com.github.TartaricAlkaline:ImageStream:-SNAPSHOT"
-    include "com.github.TartaricAlkaline:ImageStream:-SNAPSHOT"
+    implementation "com.github.TartaricAlkaline:ImageStream:b543665ea5"
+    include "com.github.TartaricAlkaline:ImageStream:b543665ea5"
 
-    modCompileOnly "maven.modrinth:iris:1.10.7+1.21.11-fabric"
+
+
+    compileOnly "maven.modrinth:iris:gxZWWnKH"
 
     // Pull common's compile output (named/mojmap) into fabric for both compile and dev-runtime.
-    common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
+    common(project(':common')) { transitive = false }
     // Must use transformProductionFabric (not namedElements) so architectury rewrites
     // @ExpectPlatform stubs to delegate to *Impl — otherwise runtime AssertionError.
     shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
@@ -73,7 +75,26 @@ shadowJar {
     archiveClassifier = 'dev-shadow'
 }
 
-remapJar {
-    input.set shadowJar.archiveFile
+// The regular jar task performs Loom's no-remap nested dependency processing.
+jar {
     dependsOn shadowJar
+    archiveClassifier = ''
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { zipTree(shadowJar.archiveFile.get().asFile) }
+}
+
+// Preserve the Windows stack margin used by Mojang's 26.3 launcher.
+// The same setting is used in the 26.2 Windows regression tests.
+loom.runs.client {
+    if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+        vmArg '-XX:StackShadowPages=32'
+    }
+}
+
+// Opt-in reproducible local testing; it never changes an installed game profile.
+if (project.hasProperty('portSmokeWorld')) {
+    loom.runs.client {
+        programArgs '--quickPlaySingleplayer', project.property('portSmokeWorld').toString()
+        programArgs '--width', '1100', '--height', '700'
+    }
 }

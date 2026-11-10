@@ -38,8 +38,8 @@ public final class YSMChannelImpl {
     public static void init(Identifier id, String version) {
         channelId = id;
         YSMPayload.init(id);
-        PayloadTypeRegistry.playC2S().register(YSMPayload.TYPE, YSMPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(YSMPayload.TYPE, YSMPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(YSMPayload.TYPE, YSMPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(YSMPayload.TYPE, YSMPayload.CODEC);
 
         ServerLifecycleEvents.SERVER_STARTED.register(server -> currentServer = server);
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> currentServer = null);
@@ -110,7 +110,7 @@ public final class YSMChannelImpl {
     }
 
     public static Packet<?> toClientboundPacket(Object packet) {
-        return ServerPlayNetworking.createS2CPacket(encodePayload(packet));
+        return ServerPlayNetworking.createClientboundPacket(encodePayload(packet));
     }
 
     public static Packet<?> toServerboundPacket(Object packet) {

@@ -41,11 +41,11 @@ public final class PlayerModelToggleKey {
                 return;
             }
             if (NetworkHandler.isClientConnected() && !ServerConfig.CAN_SWITCH_MODEL.get()) {
-                Minecraft.getInstance().setScreen(new ExtraPlayerConfigScreen(null));
+                Minecraft.getInstance().gui.setScreen(new ExtraPlayerConfigScreen(null));
             } else if (GeneralConfig.DISCLAIMER_SHOW.get()) {
-                Minecraft.getInstance().setScreen(new DisclaimerScreen());
+                Minecraft.getInstance().gui.setScreen(new DisclaimerScreen());
             } else {
-                Minecraft.getInstance().setScreen(new PlayerModelScreen());
+                Minecraft.getInstance().gui.setScreen(new PlayerModelScreen());
             }
         }
     }

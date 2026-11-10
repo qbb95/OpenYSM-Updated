@@ -23,7 +23,7 @@ public class HasAnyCurios extends LivingEntityFunction {
         ReferenceOpenHashSet<Item> referenceOpenHashSet = ThreadLocalItemTagSets.ITEM_SET.get();
         referenceOpenHashSet.clear();
         for (int i = 1; i < arguments.size(); i++) {
-            Identifier name = arguments.getResourceLocation(context, i);
+            Identifier name = arguments.getIdentifier(context, i);
             if (name == null) {
                 return null;
             }
