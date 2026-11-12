@@ -48,6 +48,20 @@ public final class ModelPreviewRenderer {
 
     private static boolean isFirstPersonMode = false;
 
+    private static boolean headHiddenInFirstPerson = false;
+
+    /**
+     * 仅表示"当前这一遍世界渲染正把本地玩家的头部藏起来"，与 {@link #isFirstPerson()} 不同：
+     * 纸娃娃 / 模型预览 / RealCamera 的外部捕获永远不会置位。
+     */
+    public static void setHeadHiddenInFirstPerson(boolean hidden) {
+        headHiddenInFirstPerson = hidden;
+    }
+
+    public static boolean isHeadHiddenInFirstPerson() {
+        return headHiddenInFirstPerson;
+    }
+
     public static void setPreviewMode(boolean previewMode) {
         isPreviewMode = previewMode;
     }

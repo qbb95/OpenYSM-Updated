@@ -17,6 +17,7 @@
     "client.InventoryScreenMixin",
     "client.LivingEntityAccessor",
     "client.LivingRendererMixin",
+    "client.MouseHandlerMixin",
     "client.PauseScreenMixin",
     "client.ScreenAccessor",
     "client.ThrowableItemProjectileAccessor",

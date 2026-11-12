@@ -8,6 +8,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.Minecraft;
 import rip.ysm.api.client.HudOverlay;
+import rip.ysm.compat.realcamera.RealCameraBinding;
 
 public final class YesSteveModelFabricClient implements ClientModInitializer {
     @Override
@@ -26,5 +27,6 @@ public final class YesSteveModelFabricClient implements ClientModInitializer {
         });
 
         ClientModelManager.loadDefaultModel();
+        RealCameraBinding.register();
     }
 }

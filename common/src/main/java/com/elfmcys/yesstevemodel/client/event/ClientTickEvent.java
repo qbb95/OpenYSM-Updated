@@ -9,6 +9,7 @@ import com.elfmcys.yesstevemodel.client.upload.UploadManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import rip.ysm.api.PlatformAPI;
+import rip.ysm.compat.realcamera.ScrollDolly;
 
 public final class ClientTickEvent {
 
@@ -37,6 +38,7 @@ public final class ClientTickEvent {
         if (localPlayer != null) {
             PlayerCapability.get(localPlayer).ifPresent(cap -> cap.tickAnimations());
         }
+        ScrollDolly.tickEnd();
     }
 
     public static int getTickCount() {

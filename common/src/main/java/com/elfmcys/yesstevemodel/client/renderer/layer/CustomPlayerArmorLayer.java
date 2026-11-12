@@ -31,6 +31,10 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
     @Override
     public void render(AvatarRenderState state, PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         Player player = entityLivingBaseIn.getEntity();
+        if (com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer.isHeadHiddenInFirstPerson()) {
+            // 头骨已被第一人称隐藏，头部挂件跟着一起跳过，否则会浮在半空
+            return;
+        }
         AnimatedGeoModel model = entityLivingBaseIn.getCurrentModel();
         if (model != null && !model.headBones().isEmpty()) {
             ItemStack itemBySlot = player.getItemBySlot(EquipmentSlot.HEAD);

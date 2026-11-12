@@ -76,6 +76,10 @@ public class AnimatedGeoModel {
     @Nullable
     private final IBone allHeadBone;
 
+    /** 所有 "AllHead" / "AllHead2" / "AllHead3"（双骨架模型用后缀区分两棵树）。 */
+    @NotNull
+    private final List<IBone> allHeadBones;
+
     @Nullable
     private final IBone viewLocatorBone;
 
@@ -118,6 +122,14 @@ public class AnimatedGeoModel {
         this.backpackBones = lookupBones(data.backpackIds);
         this.allHeadBone = boneIdsMap.get(ALL_HEAD_ID);
         this.viewLocatorBone = boneIdsMap.get(VIEW_LOCATOR_ID);
+        ReferenceArrayList<IBone> allHeads = new ReferenceArrayList<>();
+        for (IBone bone : boneIdsMap.values()) {
+            String name = bone.getName();
+            if (name.startsWith("AllHead") && name.substring(7).chars().allMatch(Character::isDigit)) {
+                allHeads.add(bone);
+            }
+        }
+        this.allHeadBones = ReferenceLists.unmodifiable(allHeads);
         data.extraLeftHandGroups.forEach(intList -> this.leftHandGroupChains.add(lookupBones(intList)));
         data.extraRightHandGroups.forEach(intList2 -> this.rightHandGroupChains.add(lookupBones(intList2)));
         data.passengerGroups.forEach(intList3 -> this.passengerGroupChains.add(lookupBones(intList3)));
@@ -224,6 +236,11 @@ public class AnimatedGeoModel {
     @Nullable
     public IBone allHeadBone() {
         return this.allHeadBone;
+    }
+
+    @NotNull
+    public List<IBone> allHeadBones() {
+        return this.allHeadBones;
     }
 
     @Nullable

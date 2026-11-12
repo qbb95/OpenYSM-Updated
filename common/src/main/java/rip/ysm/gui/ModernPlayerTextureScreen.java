@@ -141,7 +141,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         previewLeft = panelRight - previewWidth();
         previewTop = rowAreaTop;
         previewRight = panelRight;
-        previewBottom = panelBottom - 60;
+        previewBottom = rowAreaBottom;
 
         icons.clear();
         int iconY = panelTop;
@@ -281,8 +281,8 @@ public class ModernPlayerTextureScreen extends OptionScreen {
             out.add(new int[]{searchBox.getX(), searchBox.getY(), searchBox.getWidth(), searchBox.getHeight()});
         }
         if (hoveredIcon != null || hoveredRow instanceof AnimationRow) {
-            int descY = panelBottom - 32;
-            out.add(new int[]{panelLeft, descY, panelRight - panelLeft, 28});
+            int descY = descPanelTop();
+            out.add(new int[]{panelLeft, descY, panelRight - panelLeft, descPanelHeight()});
         }
     }
 
@@ -300,12 +300,12 @@ public class ModernPlayerTextureScreen extends OptionScreen {
     @Override
     protected void renderDescription(GuiGraphics g, int descY) {
         if (hoveredIcon != null) {
-            g.fill(panelLeft, descY, panelRight, descY + 28, 0x80000000);
+            g.fill(panelLeft, descY, panelRight, descY + descPanelHeight(), 0x80000000);
             g.drawString(this.font, hoveredIcon.tooltip, panelLeft + 6, descY + 10, -1, false);
             return;
         }
         if (hoveredRow instanceof AnimationRow row) {
-            g.fill(panelLeft, descY, panelRight, descY + 28, 0x80000000);
+            g.fill(panelLeft, descY, panelRight, descY + descPanelHeight(), 0x80000000);
             g.drawString(this.font, row.getMessage(), panelLeft + 6, descY + 4, -1, false);
             g.drawString(this.font, Component.literal(row.animKey).withStyle(ChatFormatting.GRAY), panelLeft + 6, descY + 16, 0xFFAAAAAA, false);
         }

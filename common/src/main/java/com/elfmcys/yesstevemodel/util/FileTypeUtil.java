@@ -65,12 +65,12 @@ public final class FileTypeUtil {
     }
 
     /**
-     * 瑙ｆ瀽 "match"瀛楁鐨?
+     * 解析 "match"字段。
      *  "match": [
      *     "minecraft:arrow",
      *     "#minecraft:arrows"
      *  ],
-     *  甯?鐨勬槸瀹炰綋 Tag
+     *  带#的是实体 Tag
      */
     public static Set<Identifier> resolveEntityTypes(String[] strArr) {
         HashSet<Identifier> hashSet = new HashSet<>();

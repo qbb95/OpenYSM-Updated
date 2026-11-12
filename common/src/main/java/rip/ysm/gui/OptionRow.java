@@ -4,11 +4,19 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 public abstract class OptionRow<T> extends AbstractWidget {
     protected final Option<T> option;
+
+    /**
+     * Rows that depend on another option can be greyed out. A disabled row keeps
+     * rendering (so the label and value stay readable) but ignores all input and
+     * paints its control darker.
+     */
+    private boolean rowEnabled = true;
 
     protected OptionRow(int x, int y, int width, int height, Option<T> option) {
         super(x, y, width, height, option == null ? Component.empty() : option.getLabel());
@@ -19,21 +27,46 @@ public abstract class OptionRow<T> extends AbstractWidget {
         return option;
     }
 
+    public boolean isRowEnabled() {
+        return rowEnabled;
+    }
+
+    public void setRowEnabled(boolean enabled) {
+        if (this.rowEnabled == enabled) return;
+        this.rowEnabled = enabled;
+        if (!enabled) closeOverlay();
+    }
+
     public void refresh() {
+    }
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        return rowEnabled && super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+        return rowEnabled && super.mouseDragged(event, dx, dy);
     }
 
     @Override
     protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         boolean dirty = option != null && option.isDirty();
-        int bg = isHovered() ? 0x90171717 : (dirty ? 0x90060606 : 0x90000000);
+        boolean disabled = !rowEnabled;
+        int bg = disabled ? 0x90000000 : (isHovered() ? 0x90171717 : (dirty ? 0x90060606 : 0x90000000));
         g.fill(getX(), getY(), getX() + width, getY() + height, bg);
 
         Component label = getMessage();
-        int textColor = dirty ? -1 : 0x90FFFFFF;
+        int textColor = disabled ? 0xFF6B6B6B : (dirty ? -1 : 0x90FFFFFF);
         int textY = getY() + (height - 8) / 2;
         g.drawString(Minecraft.getInstance().font, label, getX() + 8, textY, textColor, false);
 
         renderControl(g, mouseX, mouseY, partialTick);
+
+        if (disabled) {
+            g.fill(controlX(), controlY(), controlX() + controlWidth(), controlY() + controlHeight(), 0xA0101010);
+        }
     }
 
     protected abstract void renderControl(GuiGraphics g, int mouseX, int mouseY, float partialTick);
@@ -55,6 +88,7 @@ public abstract class OptionRow<T> extends AbstractWidget {
     }
 
     protected boolean isMouseOverControl(double mx, double my) {
+        if (!rowEnabled) return false;
         int cx = controlX();
         int cy = controlY();
         return mx >= cx && mx < cx + controlWidth() && my >= cy && my < cy + controlHeight();

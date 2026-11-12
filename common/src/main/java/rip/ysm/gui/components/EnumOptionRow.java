@@ -9,6 +9,7 @@ import rip.ysm.gui.Option;
 import rip.ysm.gui.OptionRow;
 
 import java.awt.*;
+import java.util.Locale;
 
 public class EnumOptionRow<E extends Enum<E>> extends OptionRow<E> {
     private final E[] values;
@@ -36,7 +37,7 @@ public class EnumOptionRow<E extends Enum<E>> extends OptionRow<E> {
         g.fill(cx, cy, cx + cw, cy + ch, blendBg(hover, 0x3EC8C8C8));
         g.renderOutline(cx, cy, cw, ch, 0x60FFFFFF);
 
-        Component text = Component.literal(prettify(option.get().name()));
+        Component text = valueLabel(option.get());
         g.drawString(Minecraft.getInstance().font, text, cx + 6, cy + (ch - 8) / 2, 0xFFFFFFFF, false);
 
         int arrowX = cx + cw - 10;
@@ -93,7 +94,7 @@ public class EnumOptionRow<E extends Enum<E>> extends OptionRow<E> {
             boolean selected = idx == currentIndex();
             int bg = selected ? new Color(255,255,255,60).getRGB() : (hover ? 0xFF333333 : 0);
             if (bg != 0) g.fill(listX + 1, itemY, listX + cw - 1, itemY + 14, bg);
-            g.drawString(Minecraft.getInstance().font, Component.literal(prettify(values[idx].name())), listX + 6, itemY + (14 - 8) / 2, -1, true);
+            g.drawString(Minecraft.getInstance().font, valueLabel(values[idx]), listX + 6, itemY + (14 - 8) / 2, -1, true);
         }
         if (values.length > visible) {
             int trackX = listX + cw - 3;
@@ -146,6 +147,16 @@ public class EnumOptionRow<E extends Enum<E>> extends OptionRow<E> {
         int max = Math.max(0, (values.length - visible) * 14);
         listScroll = (float) Math.max(0, Math.min(max, listScroll - delta * 14));
         return true;
+    }
+
+    /**
+     * Prefers a translated value name ({@code <option key>.value.<enum name>}) and
+     * falls back to the prettified constant name when no translation exists.
+     */
+    private Component valueLabel(E value) {
+        String name = value.name();
+        String key = "gui.yes_steve_model.config." + option.getTranslationKey() + ".value." + name.toLowerCase(Locale.ROOT);
+        return Component.translatableWithFallback(key, prettify(name));
     }
 
     private static String prettify(String name) {

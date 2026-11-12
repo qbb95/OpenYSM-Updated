@@ -101,7 +101,7 @@ public abstract class OptionScreen extends Screen {
             rowAreaLeft = panelLeft;
             rowAreaTop = panelTop + 6 + 18;
             rowAreaRight = computeRowAreaRight();
-            rowAreaBottom = panelBottom - 60;
+            rowAreaBottom = listAreaBottom();
         } else if (compactTabs) {
             tabAreaLeft = panelLeft;
             tabAreaRight = panelRight;
@@ -111,17 +111,17 @@ public abstract class OptionScreen extends Screen {
             rowAreaLeft = panelLeft;
             rowAreaTop = tabAreaBottom + 4;
             rowAreaRight = computeRowAreaRight();
-            rowAreaBottom = panelBottom - 60;
+            rowAreaBottom = listAreaBottom();
         } else {
             tabAreaLeft = panelLeft;
             tabAreaTop = panelTop + 6 + 18;
             tabAreaRight = panelLeft + 110;
-            tabAreaBottom = panelBottom - 60;
+            tabAreaBottom = listAreaBottom();
 
             rowAreaLeft = panelLeft + 110 + 6;
             rowAreaTop = panelTop + 6 + 18;
             rowAreaRight = computeRowAreaRight();
-            rowAreaBottom = panelBottom - 60;
+            rowAreaBottom = listAreaBottom();
         }
 
         tabContentHeight = 0;
@@ -151,7 +151,7 @@ public abstract class OptionScreen extends Screen {
         tabScrollOffset = 0;
         tabScrollDisplay = 0;
 
-        int footerY = panelBottom - 56;
+        int footerY = footerRowTop();
         int btnW = 70;
         int btnH = 20;
         int gap = 4;
@@ -197,6 +197,44 @@ public abstract class OptionScreen extends Screen {
 
     protected boolean showTabs() {
         return true;
+    }
+
+    /** Height of the description title line. */
+    protected static final int DESC_TITLE_HEIGHT = 16;
+
+    /** Height of one wrapped description line. */
+    protected static final int DESC_LINE_HEIGHT = 10;
+
+    /**
+     * How many description lines the bottom bar reserves. Descriptions used to be clamped to a
+     * single line ((28 - 16) / 10 == 1), so any longer text was silently cut off.
+     */
+    protected static final int DESC_MAX_LINES = 5;
+
+    /** Padding between the last description line and the panel bottom edge. */
+    protected static final int DESC_BOTTOM_PADDING = 6;
+
+    /** Footer button height. */
+    protected static final int FOOTER_BUTTON_HEIGHT = 20;
+
+    /** Fixed height of the description bar: one title line plus the reserved body lines. */
+    protected int descPanelHeight() {
+        return DESC_TITLE_HEIGHT + DESC_MAX_LINES * DESC_LINE_HEIGHT + DESC_BOTTOM_PADDING;
+    }
+
+    /** Top edge of the description bar, which always hugs the panel bottom edge. */
+    protected int descPanelTop() {
+        return panelBottom - 4 - descPanelHeight();
+    }
+
+    /** Top edge of the footer button row, which sits just above the description bar. */
+    protected int footerRowTop() {
+        return descPanelTop() - 4 - FOOTER_BUTTON_HEIGHT;
+    }
+
+    /** Bottom edge of the scrollable option list, which sits just above the footer buttons. */
+    protected int listAreaBottom() {
+        return footerRowTop() - 6;
     }
 
     protected void selectGroup(OptionGroup group) {
@@ -284,7 +322,7 @@ public abstract class OptionScreen extends Screen {
         tabScrollDisplay += (tabScrollOffset - tabScrollDisplay) * lerp;
         if (Math.abs(tabScrollOffset - tabScrollDisplay) < 0.5f) tabScrollDisplay = tabScrollOffset;
 
-        int descY = panelBottom - 32;
+        int descY = descPanelTop();
 
         boolean inRowArea = mouseX >= rowAreaLeft && mouseX < rowAreaRight && mouseY >= rowAreaTop && mouseY < rowAreaBottom;
         int adjMouseY = inRowArea ? mouseY + Math.round(rowScrollDisplay) : Integer.MIN_VALUE;
@@ -381,8 +419,8 @@ public abstract class OptionScreen extends Screen {
         addFooterRect(out, saveBtn);
         addFooterRect(out, cancelBtn);
         if (hoveredRow != null) {
-            int descY = panelBottom - 32;
-            out.add(new int[]{panelLeft, descY, panelRight - panelLeft, 28});
+            int descY = descPanelTop();
+            out.add(new int[]{panelLeft, descY, panelRight - panelLeft, descPanelHeight()});
         }
     }
 
@@ -437,7 +475,7 @@ public abstract class OptionScreen extends Screen {
 
     protected void renderDescription(GuiGraphics g, int descY) {
         if (hoveredRow == null || hoveredRow.getOption() == null) return;
-        g.fill(panelLeft, descY, panelRight, descY + 28, 0x80000000);
+        g.fill(panelLeft, descY, panelRight, descY + descPanelHeight(), 0x80000000);
         Option<?> opt = hoveredRow.getOption();
         Component title = opt.getLabel();
         g.drawString(this.font, title, panelLeft + 6, descY + 4, -1, false);
@@ -445,11 +483,11 @@ public abstract class OptionScreen extends Screen {
         Component desc = opt.getDescription();
         int maxWidth = panelRight - panelLeft - 6 * 2;
         List<FormattedCharSequence> lines = this.font.split(desc, maxWidth);
-        int lineY = descY + 16;
-        int max = Math.min(lines.size(), (28 - 16) / 10);
+        int lineY = descY + DESC_TITLE_HEIGHT;
+        int max = Math.min(lines.size(), DESC_MAX_LINES);
         for (int i = 0; i < max; i++) {
             g.drawString(this.font, lines.get(i), panelLeft + 6, lineY, 0xFFCCCCCC, false);
-            lineY += 10;
+            lineY += DESC_LINE_HEIGHT;
         }
     }
 

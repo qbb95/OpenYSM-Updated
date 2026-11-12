@@ -113,7 +113,7 @@ public class ModelSettingsScreen extends OptionScreen {
         previewLeft = panelRight - previewWidth();
         previewTop = rowAreaTop;
         previewRight = panelRight;
-        previewBottom = panelBottom - 60;
+        previewBottom = rowAreaBottom;
         if (initialGroupId != null) {
             for (OptionGroup g : groups) {
                 if (g instanceof IdentifiedGroup ig && initialGroupId.equals(ig.id)) {

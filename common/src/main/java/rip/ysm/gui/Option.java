@@ -33,6 +33,10 @@ public class Option<T> {
         return new Option<>(key, cfg::get, cfg::set);
     }
 
+    public String getTranslationKey() {
+        return translationKey;
+    }
+
     public Component getLabel() {
         return Component.translatable("gui.yes_steve_model.config." + translationKey);
     }
